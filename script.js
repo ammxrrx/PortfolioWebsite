@@ -4,9 +4,9 @@
 
 // --- AUDIO PLAYER STATE ---
 const tracks = [
-  { title: "Way-ProdAmmar.mp3", src: "music/Way-ProdAmmar.mp3" },
-  { title: "Ladudi-ProdAmmar.wav", src: "music/Ladudi-ProdAmmar.wav" },
-  { title: "ANYMORE-ProdAmmar.mp3", src: "music/ANYMORE-ProdAmmar.mp3" }
+  { title: "MOVE - Ammar", src: "music/Ladudi-ProdAmmar.wav" },
+  { title: " MAKE WAY - Ammar", src: "music/Way-ProdAmmar.mp3" },
+  { title: "ANYMORE - Ammar", src: "music/ANYMORE-ProdAmmar.mp3" }
 ];
 let currentTrack = 0;
 let audio = null;
@@ -14,6 +14,8 @@ let isPlaying = false;
 let clockInterval = null;
 let timeStart = null;
 let elapsed = 0;
+let autoplayUnlockListening = false;
+let autoplayUnlockTrying = false;
 
 // --- AUDIO FUNCTIONS ---
 
@@ -21,6 +23,8 @@ function initAudio() {
   if (!audio) {
     audio = new Audio();
     audio.volume = 0.7;
+    audio.preload = 'auto';
+    audio.autoplay = true;
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('ended', nextTrack);
     audio.addEventListener('error', () => {
@@ -28,23 +32,40 @@ function initAudio() {
         '⚠ Add your MP3/WAV files to /music/ to enable playback';
     });
   }
-  audio.src = tracks[currentTrack].src;
+  const nextSrc = new URL(tracks[currentTrack].src, window.location.href).href;
+  if (audio.src !== nextSrc) audio.src = tracks[currentTrack].src;
   document.getElementById('now-playing').textContent = '▷ ' + tracks[currentTrack].title;
 }
 
-function loadAudio() {
+function setPlayerUi(playing) {
+  const btn = document.getElementById('btn-play');
+  if (btn) {
+    btn.textContent = playing ? '⏸' : '▶';
+    btn.classList.toggle('active', playing);
+  }
+  document.getElementById('eq-mini').style.display = playing ? 'flex' : 'none';
+}
+
+function loadAudio(showBlockedMessage = true) {
   initAudio();
   const p = audio.play();
   if (p !== undefined) {
-    p.then(() => {
+    return p.then(() => {
       isPlaying = true;
+      setPlayerUi(true);
       startClock();
-      document.getElementById('eq-mini').style.display = 'flex';
       document.getElementById('audio-msg').style.display = 'none';
+      return true;
     }).catch(() => {
-      document.getElementById('audio-msg').style.display = 'block';
+      if (showBlockedMessage) document.getElementById('audio-msg').style.display = 'block';
+      return false;
     });
   }
+  isPlaying = true;
+  setPlayerUi(true);
+  startClock();
+  document.getElementById('audio-msg').style.display = 'none';
+  return Promise.resolve(true);
 }
 
 function togglePlay(btn) {
@@ -52,30 +73,51 @@ function togglePlay(btn) {
   if (isPlaying) {
     audio.pause();
     isPlaying = false;
-    btn.textContent = '▶';
-    btn.classList.remove('active');
+    setPlayerUi(false);
     stopClock();
-    document.getElementById('eq-mini').style.display = 'none';
   } else {
-    audio.play();
-    isPlaying = true;
-    btn.textContent = '⏸';
-    btn.classList.add('active');
-    startClock();
-    document.getElementById('eq-mini').style.display = 'flex';
+    loadAudio();
   }
 }
 
 function stopPlayer() {
   if (audio) { audio.pause(); audio.currentTime = 0; }
   isPlaying = false;
-  const pb = document.getElementById('btn-play');
-  pb.textContent = '▶';
-  pb.classList.remove('active');
+  setPlayerUi(false);
   stopClock();
-  document.getElementById('eq-mini').style.display = 'none';
   document.getElementById('mini-prog-fill').style.width = '0%';
   document.getElementById('time-display').textContent = '00:00:00';
+}
+
+function removeAutoplayUnlock() {
+  ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(eventName => {
+    window.removeEventListener(eventName, unlockAutoplay);
+  });
+  autoplayUnlockListening = false;
+}
+
+function unlockAutoplay() {
+  if (isPlaying || autoplayUnlockTrying) return;
+  autoplayUnlockTrying = true;
+  loadAudio(false).then(started => {
+    autoplayUnlockTrying = false;
+    if (started) removeAutoplayUnlock();
+  });
+}
+
+function enableAutoplayUnlock() {
+  if (autoplayUnlockListening) return;
+  autoplayUnlockListening = true;
+  ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(eventName => {
+    window.addEventListener(eventName, unlockAutoplay, { passive: true });
+  });
+  document.getElementById('audio-msg').style.display = 'block';
+}
+
+function startAutoplay() {
+  loadAudio(false).then(started => {
+    if (!started) enableAutoplayUnlock();
+  });
 }
 
 function nextTrack() {
@@ -309,4 +351,5 @@ if (footerTime) {
     fmt(now.getHours()) + ':' + fmt(now.getMinutes()) + ':' + fmt(now.getSeconds());
 }
 
-window.addEventListener('load', loadAudio);
+document.addEventListener('DOMContentLoaded', startAutoplay);
+window.addEventListener('load', startAutoplay);
