@@ -1,582 +1,666 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AMMAR.DAW — Portfolio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMMAR — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<!-- TOP TRANSPORT BAR -->
-<div id="transport">
-  <div class="transport-logo">AMMAR.DAW</div>
-  <div class="transport-controls">
-    <button class="btn-transport active" id="btn-play" title="Play/Pause" onclick="togglePlay(this)">▶</button>
-    <button class="btn-transport" title="Stop" onclick="stopPlayer()">■</button>
-    <button class="btn-transport" title="Previous Track" onclick="prevTrack()">⏮</button>
-    <button class="btn-transport" title="Next Track" onclick="nextTrack()">⏭</button>
-    <button class="btn-transport" title="Loop">⟳</button>
+  <!-- TOP TRANSPORT BAR -->
+  <div id="transport">
+    <div class="transport-logo">AMMAR</div>
+    <div class="transport-controls">
+      <button class="btn-transport active" id="btn-play" title="Play/Pause" onclick="togglePlay(this)">▶</button>
+      <button class="btn-transport" title="Stop" onclick="stopPlayer()">■</button>
+      <button class="btn-transport" title="Previous Track" onclick="prevTrack()">⏮</button>
+      <button class="btn-transport" title="Next Track" onclick="nextTrack()">⏭</button>
+    </div>
+    <div class="transport-bpm">
+      <span>BPM</span>
+      <span class="bpm-val" id="bpm-display">128</span>
+    </div>
+    <div class="transport-time" id="time-display">00:00:00</div>
+    <div class="transport-track">
+      <span class="track-name" id="now-playing">▷ ANYMORE-ProdAmmar</span>
+      <div class="mini-progress" id="mini-prog" onclick="seekFromBar(event,this)">
+        <div class="mini-progress-fill" id="mini-prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="transport-vol">
+      <span>VOL</span>
+      <input type="range" class="vol-slider" id="vol-slider" min="0" max="100" value="70"
+        oninput="setVolume(this.value)">
+    </div>
+    <div class="eq-mini" id="eq-mini" style="display:none">
+      <div class="eq-bar-m" style="height:6px"></div>
+      <div class="eq-bar-m" style="height:10px"></div>
+      <div class="eq-bar-m" style="height:8px"></div>
+      <div class="eq-bar-m" style="height:14px"></div>
+      <div class="eq-bar-m" style="height:5px"></div>
+    </div>
+    <nav class="nav-links">
+      <a class="nav-link" href="#about">About</a>
+      <a class="nav-link" href="#skills">Skills</a>
+      <a class="nav-link" href="#projects">Projects</a>
+      <a class="nav-link" href="#music">Music</a>
+      <a class="nav-link" href="#contact">Contact</a>
+    </nav>
   </div>
-  <div class="transport-bpm">
-    <span>BPM</span>
-    <span class="bpm-val" id="bpm-display">128</span>
-  </div>
-  <div class="transport-time" id="time-display">00:00:00</div>
-  <div class="transport-track">
-    <span class="track-name" id="now-playing">▷ track1.mp3 — waiting for input...</span>
-    <div class="mini-progress" id="mini-prog" onclick="seekFromBar(event,this)">
-      <div class="mini-progress-fill" id="mini-prog-fill" style="width:0%"></div>
-    </div>
-  </div>
-  <div class="transport-vol">
-    <span>VOL</span>
-    <input type="range" class="vol-slider" id="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
-  </div>
-  <div class="eq-mini" id="eq-mini" style="display:none">
-    <div class="eq-bar-m" style="height:6px"></div>
-    <div class="eq-bar-m" style="height:10px"></div>
-    <div class="eq-bar-m" style="height:8px"></div>
-    <div class="eq-bar-m" style="height:14px"></div>
-    <div class="eq-bar-m" style="height:5px"></div>
-  </div>
-  <nav class="nav-links">
-    <a class="nav-link" href="#about">About</a>
-    <a class="nav-link" href="#skills">Skills</a>
-    <a class="nav-link" href="#projects">Projects</a>
-    <a class="nav-link" href="#music">Music</a>
-    <a class="nav-link" href="#contact">Contact</a>
-  </nav>
-</div>
 
-<main>
+  <main>
 
-<!-- HERO -->
-<section id="hero">
-  <div class="hero-grid-lines"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-glow2"></div>
-  <div style="position:relative;z-index:2;">
-    <div class="daw-label">SESSION LOADED — READY TO RENDER</div>
-    <div class="hero-name">AMMAR<span>.</span></div>
-    <div class="hero-roles">
-      <span>Computer Science Student</span> · <span>Software Developer</span> · <span>AI Enthusiast</span> · <span style="color:var(--cyan)">Music Producer</span>
-    </div>
-    <div class="eq-display" style="margin:20px 0 16px;">
-      <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-      <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-      <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-      <div class="eq-bar"></div>
-    </div>
-    <p class="hero-tagline">Building <em>systems</em>, solving <em>problems</em>, and producing <em>sound.</em></p>
-    <div class="hero-btns">
-      <button class="btn-daw primary" onclick="loadAudio()">
-        <span class="icon">▶</span> PLAY PORTFOLIO
-      </button>
-      <a class="btn-daw" href="#projects">
-        <span class="icon">⋮⋮</span> VIEW PROJECTS
-      </a>
-      <a class="btn-daw" href="#contact">
-        <span class="icon">◈</span> OPEN RESUME
-      </a>
-      <a class="btn-daw" href="#contact">
-        <span class="icon">◉</span> CONTACT ME
-      </a>
-    </div>
-    <div id="audio-msg" style="margin-top:16px;font-family:var(--font-mono);font-size:11px;color:var(--amber);display:none;">
-      ⚠ Click PLAY PORTFOLIO above to start the audio experience
-    </div>
-  </div>
-  <canvas id="waveform-canvas" style="position:absolute;bottom:0;left:0;right:0;height:100px;width:100%;opacity:0.35;pointer-events:none;"></canvas>
-</section>
-
-<!-- TIMELINE RULER -->
-<div class="timeline-ruler">
-  <div class="ruler-marks">
-    <div class="ruler-mark">1 . INTRO</div>
-    <div class="ruler-mark">2 . ABOUT</div>
-    <div class="ruler-mark">3 . SKILLS</div>
-    <div class="ruler-mark">4 . PROJECTS</div>
-    <div class="ruler-mark">5 . ACHIEVEMENTS</div>
-    <div class="ruler-mark">6 . MUSIC</div>
-    <div class="ruler-mark">7 . CONTACT</div>
-    <div class="ruler-mark">8 . END</div>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<section id="about">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">02</span>
-      <span class="section-title">ABOUT — PLUGIN INFO</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="about-panel">
-      <p>I'm a Computer Science student at FAST-NUCES Lahore (Class of 2028), building software systems, AI agents, OS simulations, and creative frontend experiences. I care about the low-level details — from mutex-protected shared memory to hand-crafted VGA text-mode rendering — and about the high-level craft of making things feel right.</p>
-      <p>Outside of code, I produce music. These two worlds aren't separate for me — both are about pattern recognition, iteration, and making something that resonates. This portfolio reflects both sides.</p>
-      <div class="about-stats">
-        <div class="stat-chip"><strong>2024</strong>Started at FAST-NUCES</div>
-        <div class="stat-chip"><strong>6+</strong>Major Projects</div>
-        <div class="stat-chip"><strong>8+</strong>Languages</div>
-        <div class="stat-chip"><strong>∞</strong>Coffee Consumed</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SKILLS -->
-<section id="skills">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">03</span>
-      <span class="section-title">SKILLS — MIXER RACK</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="piano-accent">
-      <div class="pk"></div><div class="pk b"></div><div class="pk"></div><div class="pk"></div>
-      <div class="pk b"></div><div class="pk"></div><div class="pk b"></div><div class="pk"></div>
-      <div class="pk"></div><div class="pk b"></div><div class="pk"></div><div class="pk"></div>
-      <div class="pk b"></div><div class="pk"></div><div class="pk b"></div><div class="pk"></div>
-      <div class="pk"></div><div class="pk b"></div><div class="pk"></div><div class="pk"></div>
-      <div class="pk b"></div><div class="pk"></div><div class="pk b"></div><div class="pk"></div>
-      <div class="pk"></div><div class="pk b"></div><div class="pk"></div><div class="pk"></div>
-    </div>
-    <div class="mixer-rack">
-      <div class="channel-strip lang">
-        <div class="ch-label">Languages</div>
-        <div class="ch-fader"><div class="ch-fader-fill" data-width="90" style="width:0%"></div></div>
-        <div>
-          <span class="skill-tag">Python</span><span class="skill-tag">C</span><span class="skill-tag">C++</span>
-          <span class="skill-tag">SQL</span><span class="skill-tag">x86 ASM</span>
-          <span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">JS</span>
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-grid-lines"></div>
+      <div class="hero-glow"></div>
+      <div class="hero-glow2"></div>
+      <div style="position:relative;z-index:2;">
+        <div class="daw-label">SESSION LOADED</div>
+        <div class="hero-name">MUHAMMAD AMMAR<span>.</span></div>
+        <div class="hero-roles">
+          <span>Computer Science Student</span> · <span>Software Developer</span> · <span>AI/ML Enthusiast</span> ·
+          <span style="color:var(--cyan)">Music Producer</span>
+        </div>
+        <div class="eq-display" style="margin:20px 0 16px;">
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+        </div>
+        <p class="hero-tagline">Building <em>systems</em>, solving <em>problems</em>, and producing <em>sound.</em></p>
+        <div class="hero-btns">
+          <button class="btn-daw primary" onclick="loadAudio()">
+            <span class="icon">▶</span> PLAY PORTFOLIO
+          </button>
+          <a class="btn-daw" href="#projects">
+            <span class="icon">⋮⋮</span> VIEW PROJECTS
+          </a>
+          <a class="btn-daw" href="#contact">
+            <span class="icon">◈</span> OPEN RESUME
+          </a>
+          <a class="btn-daw" href="#contact">
+            <span class="icon">◉</span> CONTACT ME
+          </a>
+        </div>
+        <div id="audio-msg"
+          style="margin-top:16px;font-family:var(--font-mono);font-size:11px;color:var(--amber);display:none;">
+          ⚠ Click PLAY PORTFOLIO above to start the audio experience
         </div>
       </div>
-      <div class="channel-strip fw">
-        <div class="ch-label">Frameworks</div>
-        <div class="ch-fader"><div class="ch-fader-fill" data-width="75" style="width:0%"></div></div>
-        <div>
-          <span class="skill-tag">React</span><span class="skill-tag">NumPy</span>
-          <span class="skill-tag">Matplotlib</span><span class="skill-tag">Pygame</span>
-          <span class="skill-tag">SFML</span><span class="skill-tag">STL</span>
-        </div>
-      </div>
-      <div class="channel-strip db">
-        <div class="ch-label">Databases</div>
-        <div class="ch-fader"><div class="ch-fader-fill" data-width="70" style="width:0%"></div></div>
-        <div>
-          <span class="skill-tag">MySQL</span><span class="skill-tag">Oracle 11g</span>
-          <span class="skill-tag">File I/O</span><span class="skill-tag">CSV/TXT</span>
-        </div>
-      </div>
-      <div class="channel-strip os">
-        <div class="ch-label">Systems / OS</div>
-        <div class="ch-fader"><div class="ch-fader-fill" data-width="85" style="width:0%"></div></div>
-        <div>
-          <span class="skill-tag">POSIX Threads</span><span class="skill-tag">Fork/Exec</span>
-          <span class="skill-tag">Pipes</span><span class="skill-tag">FIFOs</span>
-          <span class="skill-tag">Shared Memory</span><span class="skill-tag">Mutexes</span>
-          <span class="skill-tag">Semaphores</span><span class="skill-tag">Scheduling</span>
-        </div>
-      </div>
-      <div class="channel-strip tools">
-        <div class="ch-label">Tools</div>
-        <div class="ch-fader"><div class="ch-fader-fill" data-width="80" style="width:0%"></div></div>
-        <div>
-          <span class="skill-tag">Git</span><span class="skill-tag">GitHub</span>
-          <span class="skill-tag">VS Code</span><span class="skill-tag">Linux</span>
-          <span class="skill-tag">DOSBox</span><span class="skill-tag">NASM</span>
-          <span class="skill-tag">Vercel</span>
-        </div>
+      <canvas id="waveform-canvas"
+        style="position:absolute;bottom:0;left:0;right:0;height:100px;width:100%;opacity:0.35;pointer-events:none;"></canvas>
+    </section>
+
+    <!-- TIMELINE RULER -->
+    <div class="timeline-ruler">
+      <div class="ruler-marks">
+        <div class="ruler-mark">1 . INTRO</div>
+        <div class="ruler-mark">2 . ABOUT</div>
+        <div class="ruler-mark">3 . SKILLS</div>
+        <div class="ruler-mark">4 . PROJECTS</div>
+        <div class="ruler-mark">5 . ACHIEVEMENTS</div>
+        <div class="ruler-mark">6 . MUSIC</div>
+        <div class="ruler-mark">7 . CONTACT</div>
+        <div class="ruler-mark">8 . END</div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- PROJECTS -->
-<section id="projects">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">04</span>
-      <span class="section-title">PROJECTS — ARRANGEMENT VIEW</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="arrangement-view">
-
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 01</span>
-          <span class="track-title">Advanced Pathfinding Simulation</span>
-          <span class="track-cat cat-ai">AI / Algorithms</span>
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">02</span>
+          <span class="section-title">ABOUT — PLUGIN INFO</span>
+          <div class="section-line"></div>
         </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-py">Python</div>
-            <div class="track-block b-gen">Pygame</div>
-            <div class="track-block b-gen">A* Search</div>
-            <div class="track-block b-gen">Heuristics</div>
+        <div class="about-panel">
+          <p>I'm a Computer Science student at FAST-NUCES [Class of 2028]. My main interest is AI and
+            Machine Learning, but I also enjoy building software systems, OS simulations, and creative frontend
+            projects that feel both useful and interactive. </p>
+          <p>Outside of code, I produce music. These two worlds are separate for me, but both are about pattern
+            recognition, iteration, and making something that resonates. This portfolio reflects both sides.</p>
+          <div class="about-stats">
+            <div class="stat-chip"><strong>2024</strong>Started at FAST-NUCES</div>
+            <div class="stat-chip"><strong>6+</strong>Major Projects</div>
+            <div class="stat-chip"><strong>8+</strong>Languages</div>
+            <div class="stat-chip"><strong>∞</strong>Milo Consumed</div>
           </div>
-          <div class="track-desc">
-            An interactive grid-based pathfinding simulator with real-time visualization. Implements A* and Greedy Best-First Search using Manhattan &amp; Euclidean heuristics, reducing node exploration by 40–60%. Features dynamic obstacles with real-time adaptive replanning and performance tracking.
-            <div class="track-feats">
-              <span class="feat-pill">A* Search</span>
-              <span class="feat-pill">GBFS</span>
-              <span class="feat-pill">Dynamic Obstacles</span>
-              <span class="feat-pill">Performance Metrics</span>
-              <span class="feat-pill">Real-time Visualization</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">03</span>
+          <span class="section-title">SKILLS — MIXER RACK</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="piano-accent">
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+          <div class="pk b"></div>
+          <div class="pk"></div>
+          <div class="pk"></div>
+        </div>
+        <div class="mixer-rack">
+          <div class="channel-strip lang">
+            <div class="ch-label">Languages</div>
+            <div class="ch-fader">
+              <div class="ch-fader-fill" data-width="90" style="width:0%"></div>
             </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
+            <div>
+              <span class="skill-tag">Python</span><span class="skill-tag">C</span><span class="skill-tag">C++</span>
+              <span class="skill-tag">SQL</span><span class="skill-tag">x86 ASM</span>
+              <span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">JS</span>
+            </div>
+          </div>
+          <div class="channel-strip fw">
+            <div class="ch-label">Frameworks</div>
+            <div class="ch-fader">
+              <div class="ch-fader-fill" data-width="75" style="width:0%"></div>
+            </div>
+            <div>
+              <span class="skill-tag">Pandas</span><span class="skill-tag">NumPy</span>
+              <span class="skill-tag">Matplotlib</span><span class="skill-tag">Pygame</span>
+              <span class="skill-tag">SFML</span><span class="skill-tag">STL</span>
+            </div>
+          </div>
+          <div class="channel-strip db">
+            <div class="ch-label">Databases</div>
+            <div class="ch-fader">
+              <div class="ch-fader-fill" data-width="70" style="width:0%"></div>
+            </div>
+            <div>
+              <span class="skill-tag">MySQL</span><span class="skill-tag">Oracle 11g</span>
+              <span class="skill-tag">File I/O</span><span class="skill-tag">CSV/TXT</span>
+            </div>
+          </div>
+          <div class="channel-strip os">
+            <div class="ch-label">Systems / OS</div>
+            <div class="ch-fader">
+              <div class="ch-fader-fill" data-width="85" style="width:0%"></div>
+            </div>
+            <div>
+              <span class="skill-tag">POSIX Threads</span><span class="skill-tag">Fork/Exec</span>
+              <span class="skill-tag">Pipes</span><span class="skill-tag">FIFOs</span>
+              <span class="skill-tag">Shared Memory</span><span class="skill-tag">Mutexes</span>
+              <span class="skill-tag">Semaphores</span><span class="skill-tag">Scheduling</span>
+            </div>
+          </div>
+          <div class="channel-strip tools">
+            <div class="ch-label">Tools</div>
+            <div class="ch-fader">
+              <div class="ch-fader-fill" data-width="80" style="width:0%"></div>
+            </div>
+            <div>
+              <span class="skill-tag">Git</span><span class="skill-tag">GitHub</span>
+              <span class="skill-tag">VS Code</span><span class="skill-tag">Linux</span>
+              <span class="skill-tag">DOSBox</span><span class="skill-tag">NASM</span>
+              <span class="skill-tag">Vercel</span>
             </div>
           </div>
         </div>
-        <div class="track-expand">▸</div>
       </div>
+    </section>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 02</span>
-          <span class="track-title">Wumpus World Game</span>
-          <span class="track-cat cat-ai">AI / Knowledge Agents</span>
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">04</span>
+          <span class="section-title">PROJECTS - MIXER</span>
+          <div class="section-line"></div>
         </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-js">JS</div>
-            <div class="track-block b-gen">HTML/CSS</div>
-            <div class="track-block b-gen">Logic Inference</div>
-            <div class="track-block b-gen">Vercel</div>
-          </div>
-          <div class="track-desc">
-            An interactive Wumpus World simulator with dynamic grid generation, percept-driven gameplay, and AI-based decision making. Features a knowledge-based agent using logical inference and CNF clause reasoning. Deployed live on Vercel.
-            <div class="track-feats">
-              <span class="feat-pill">Knowledge-Based Agent</span>
-              <span class="feat-pill">CNF Reasoning</span>
-              <span class="feat-pill">Auto-step Mode</span>
-              <span class="feat-pill">KB Visualization</span>
-              <span class="feat-pill">Live on Vercel</span>
+        <div class="arrangement-view">
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 01</span>
+              <span class="track-title">Advanced Pathfinding Simulation</span>
+              <span class="track-cat cat-ai">AI / Algorithms</span>
             </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-py">Python</div>
+                <div class="track-block b-gen">Pygame</div>
+                <div class="track-block b-gen">A* Search</div>
+                <div class="track-block b-gen">Heuristics</div>
+              </div>
+              <div class="track-desc">
+                An interactive grid-based pathfinding simulator with real-time visualization. Implements A* and Greedy
+                Best-First Search using Manhattan &amp; Euclidean heuristics, reducing node exploration by 40–60%.
+                Features dynamic obstacles with real-time adaptive replanning and performance tracking.
+                <div class="track-feats">
+                  <span class="feat-pill">A* Search</span>
+                  <span class="feat-pill">GBFS</span>
+                  <span class="feat-pill">Dynamic Obstacles</span>
+                  <span class="feat-pill">Performance Metrics</span>
+                  <span class="feat-pill">Real-time Visualization</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Dynamic-Pathfinding-Visualiser"
+                    target="_blank">GitHub ↗</a>
+                </div>
+              </div>
             </div>
+            <div class="track-expand">▸</div>
           </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 02</span>
+              <span class="track-title">Wumpus World Game</span>
+              <span class="track-cat cat-ai">AI / Knowledge Agents</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-js">JS</div>
+                <div class="track-block b-gen">HTML/CSS</div>
+                <div class="track-block b-gen">Logic Inference</div>
+                <div class="track-block b-gen">Vercel</div>
+              </div>
+              <div class="track-desc">
+                An interactive Wumpus World simulator with dynamic grid generation, percept-driven gameplay, and
+                AI-based decision making. Features a knowledge-based agent using logical inference and CNF clause
+                reasoning. Deployed live on Vercel.
+                <div class="track-feats">
+                  <span class="feat-pill">Knowledge-Based Agent</span>
+                  <span class="feat-pill">CNF Reasoning</span>
+                  <span class="feat-pill">Auto-step Mode</span>
+                  <span class="feat-pill">KB Visualization</span>
+                  <span class="feat-pill">Live on Vercel</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/ProjectWumpus" target="_blank">GitHub ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 03</span>
+              <span class="track-title">Hospital Patient Triage &amp; Bed Allocator</span>
+              <span class="track-cat cat-os">OS / Systems</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-c">C</div>
+                <div class="track-block b-gen">POSIX Threads</div>
+                <div class="track-block b-gen">IPC</div>
+                <div class="track-block b-gen">Shared Memory</div>
+              </div>
+              <div class="track-desc">
+                A hospital ER simulation with 5+ concurrent threads and multiple child processes for patient triage, bed
+                allocation, and discharge. Implements 3 memory allocation strategies (First-Fit, Best-Fit, Worst-Fit)
+                and 4 CPU scheduling algorithms. Fixed a critical bed allocation race condition using mutex-protected
+                critical sections.
+                <div class="track-feats">
+                  <span class="feat-pill">Fork/Exec</span>
+                  <span class="feat-pill">FIFO/Pipes/Signals</span>
+                  <span class="feat-pill">Mutex + Semaphores</span>
+                  <span class="feat-pill">FCFS/SJF/RR/Priority</span>
+                  <span class="feat-pill">Memory Strategies</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Hospital-Patient-Triage" target="_blank">GitHub
+                    ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 04</span>
+              <span class="track-title">Game AI: Tic-Tac-Toe Minimax</span>
+              <span class="track-cat cat-ai">AI / Game Theory</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-py">Python</div>
+                <div class="track-block b-gen">Minimax</div>
+                <div class="track-block b-gen">Alpha-Beta Pruning</div>
+              </div>
+              <div class="track-desc">
+                An unbeatable Tic-Tac-Toe AI using Minimax with Alpha-Beta pruning, reducing search space by 70–80%.
+                Includes a full game engine with state evaluation, win detection, and optimal AI vs AI simulation.
+                <div class="track-feats">
+                  <span class="feat-pill">Minimax</span>
+                  <span class="feat-pill">Alpha-Beta Pruning</span>
+                  <span class="feat-pill">State Evaluation</span>
+                  <span class="feat-pill">AI vs AI Mode</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Tic-Tac-Toe-Minimax" target="_blank">GitHub ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 05</span>
+              <span class="track-title">Smart Timetable Management System</span>
+              <span class="track-cat cat-ds">Data Structures / Algorithms</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-cpp">C++</div>
+                <div class="track-block b-gen">Graph Coloring</div>
+                <div class="track-block b-gen">Greedy Algo</div>
+                <div class="track-block b-gen">STL</div>
+              </div>
+              <div class="track-desc">
+                An automated scheduling engine using Graph Coloring (Welsh-Powell heuristic) to resolve resource
+                conflicts across 100+ concurrent sessions. Improved scheduling speed 50% over standard backtracking.
+                Applied Prim's MST to reduce classroom travel distance by up to 30%.
+                <div class="track-feats">
+                  <span class="feat-pill">Welsh-Powell Coloring</span>
+                  <span class="feat-pill">Prim's MST</span>
+                  <span class="feat-pill">Conflict Graph</span>
+                  <span class="feat-pill">CSV Ingestion</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Smart-Timetable-Generator" target="_blank">GitHub
+                    ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 06</span>
+              <span class="track-title">N-Queens CSP Solver</span>
+              <span class="track-cat cat-ai">AI / CSP</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-py">Python</div>
+                <div class="track-block b-gen">Backtracking</div>
+                <div class="track-block b-gen">Forward Checking</div>
+              </div>
+              <div class="track-desc">
+                A CSP solver for N-Queens using backtracking with forward checking and constraint propagation. Achieves
+                fast solutions for standard board sizes using heuristic pruning.
+                <div class="track-feats">
+                  <span class="feat-pill">Backtracking</span>
+                  <span class="feat-pill">Constraint Propagation</span>
+                  <span class="feat-pill">AC-3 Heuristics</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Sudoku-Solver-CSP" target="_blank">GitHub ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
+          <div class="track-lane" onclick="toggleTrack(this)">
+            <div class="track-header">
+              <span class="track-num">TRACK 07</span>
+              <span class="track-title">Atari Arcade Game (x86 Assembly)</span>
+              <span class="track-cat cat-asm">Assembly / Low-Level</span>
+            </div>
+            <div class="track-body">
+              <div class="track-blocks">
+                <div class="track-block b-asm">x86 ASM</div>
+                <div class="track-block b-gen">BIOS Interrupts</div>
+                <div class="track-block b-gen">VGA B800</div>
+                <div class="track-block b-gen">DOSBox</div>
+              </div>
+              <div class="track-desc">
+                A complete Atari-style brick breaker game in x86 Assembly. Real-time loop, interrupt-driven input (INT
+                33h, INT 16h), VGA text-mode rendering at segment B800, and PC speaker audio via port I/O. 2-level brick
+                engine with 60+ states, scoring, lives, and progressive difficulty.
+                <div class="track-feats">
+                  <span class="feat-pill">VGA Text Mode</span>
+                  <span class="feat-pill">INT 33h Mouse</span>
+                  <span class="feat-pill">Port I/O Audio</span>
+                  <span class="feat-pill">2-Level Engine</span>
+                  <span class="feat-pill">DOS Interrupts</span>
+                </div>
+                <div class="track-actions">
+                  <a class="btn-sm" href="https://github.com/ammxrrx/Atari-Breakout-x86" target="_blank">GitHub ↗</a>
+                </div>
+              </div>
+            </div>
+            <div class="track-expand">▸</div>
+          </div>
+
         </div>
-        <div class="track-expand">▸</div>
       </div>
+    </section>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 03</span>
-          <span class="track-title">Hospital Patient Triage &amp; Bed Allocator</span>
-          <span class="track-cat cat-os">OS / Systems</span>
+    <!-- ACHIEVEMENTS -->
+    <section id="achievements">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">05</span>
+          <span class="section-title">ACHIEVEMENTS — PRESET/PLUGINS BANK</span>
+          <div class="section-line"></div>
         </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-c">C</div>
-            <div class="track-block b-gen">POSIX Threads</div>
-            <div class="track-block b-gen">IPC</div>
-            <div class="track-block b-gen">Shared Memory</div>
+        <div class="preset-rack">
+          <div class="preset-card">
+            <div class="preset-icon pi-os">⚙</div>
+            <div class="preset-text">Built a full OS simulation: process management, IPC (pipes, FIFO, shared memory,
+              signals), multi-threading, mutex/semaphore sync, CPU scheduling (FCFS/SJF/RR/Priority), and 3 memory
+              allocation strategies.</div>
           </div>
-          <div class="track-desc">
-            A hospital ER simulation with 5+ concurrent threads and multiple child processes for patient triage, bed allocation, and discharge. Implements 3 memory allocation strategies (First-Fit, Best-Fit, Worst-Fit) and 4 CPU scheduling algorithms. Fixed a critical bed allocation race condition using mutex-protected critical sections.
-            <div class="track-feats">
-              <span class="feat-pill">Fork/Exec</span>
-              <span class="feat-pill">FIFO/Pipes/Signals</span>
-              <span class="feat-pill">Mutex + Semaphores</span>
-              <span class="feat-pill">FCFS/SJF/RR/Priority</span>
-              <span class="feat-pill">Memory Strategies</span>
-            </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
-            </div>
+          <div class="preset-card">
+            <div class="preset-icon pi-ds">◈</div>
+            <div class="preset-text">Developed an automated timetable system using Graph Coloring (100+ sessions) and
+              Prim's MST, achieving 50% speed improvement over backtracking.</div>
+          </div>
+          <div class="preset-card">
+            <div class="preset-icon pi-ai">◉</div>
+            <div class="preset-text">Implemented 4+ AI systems: A* pathfinding with 40–60% node reduction, Minimax with
+              70–80% search space pruning, knowledge-based Wumpus agents, and N-Queens CSP solving.</div>
+          </div>
+          <div class="preset-card">
+            <div class="preset-icon pi-asm">▒</div>
+            <div class="preset-text">Wrote a complete Atari game in x86 Assembly from scratch — real-time rendering via
+              VGA B800 segment, BIOS/DOS interrupts, and PC speaker audio through direct port I/O.</div>
+          </div>
+          <div class="preset-card">
+            <div class="preset-icon pi-db">▦</div>
+            <div class="preset-text">Designed relational databases with EER-to-schema conversion, full normalization
+              (1NF–BCNF), functional dependency analysis, and Oracle 11g / MySQL implementations.</div>
+          </div>
+          <div class="preset-card">
+            <div class="preset-icon pi-music">♫</div>
+            <div class="preset-text">Balancing full-time CS studies with part-time music production — applying pattern
+              recognition, iteration, and craftsmanship from code to sound design.</div>
           </div>
         </div>
-        <div class="track-expand">▸</div>
       </div>
+    </section>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 04</span>
-          <span class="track-title">Game AI: Tic-Tac-Toe Minimax</span>
-          <span class="track-cat cat-ai">AI / Game Theory</span>
+    <!-- MUSIC PORTFOLIO -->
+    <section id="music">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">06</span>
+          <span class="section-title">MUSIC — CHANNEL RACK</span>
+          <div class="section-line"></div>
         </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-py">Python</div>
-            <div class="track-block b-gen">Minimax</div>
-            <div class="track-block b-gen">Alpha-Beta Pruning</div>
+        <div class="sample-browser">
+          <div class="sb-header">
+            <span class="sb-title">◈ MUSIC LIBRARY</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Music Producer · Beats
+              &amp; Instrumentals</span>
           </div>
-          <div class="track-desc">
-            An unbeatable Tic-Tac-Toe AI using Minimax with Alpha-Beta pruning, reducing search space by 70–80%. Includes a full game engine with state evaluation, win detection, and optimal AI vs AI simulation.
-            <div class="track-feats">
-              <span class="feat-pill">Minimax</span>
-              <span class="feat-pill">Alpha-Beta Pruning</span>
-              <span class="feat-pill">State Evaluation</span>
-              <span class="feat-pill">AI vs AI Mode</span>
-            </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
-            </div>
+          <div class="sb-content">
+            <a class="sample-card" href="https://www.youtube.com/@ammxrrx" target="_blank">
+              <div class="sc-icon">▶</div>
+              <div class="sc-label">CHANNEL</div>
+              <div class="sc-title">YouTube</div>
+              <div class="sc-link">Go to YouTube →</div>
+            </a>
+            <a class="sample-card" href="https://open.spotify.com/user/lfgxglyzb2y5ohekbr5yjfhrq?si=887708ae03584f78"
+              target="_blank">
+              <div class="sc-icon">◉</div>
+              <div class="sc-label">PROFILE</div>
+              <div class="sc-title">Spotify</div>
+              <div class="sc-link">Go to Spotify →</div>
+            </a>
+            <a class="sample-card" href="https://www.youtube.com/playlist?list=PL3h9YE45UwauY8aUlYqTIP1SkWrAvgAfl"
+              target="_blank">
+              <div class="sc-icon">⋮</div>
+              <div class="sc-label">LIBRARY</div>
+              <div class="sc-title">Songs &amp; Instrumentals</div>
+              <div class="sc-link">Go to Playlist →</div>
+            </a>
+
+            <a class="sample-card" href="https://youtu.be/eqFz3zTvnbE?si=N7_ieGp9jnIkmy2U" target="_blank">
+              <div class="sc-icon">♫</div>
+              <div class="sc-label">FEATURED</div>
+              <div class="sc-title">Latest Releases</div>
+              <div class="sc-link">Go to Latest Release →</div>
+            </a>
           </div>
         </div>
-        <div class="track-expand">▸</div>
       </div>
+    </section>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 05</span>
-          <span class="track-title">Smart Timetable Management System</span>
-          <span class="track-cat cat-ds">Data Structures / Algorithms</span>
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">07</span>
+          <span class="section-title">CONTACT — EXPORT PANEL</span>
+          <div class="section-line"></div>
         </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-cpp">C++</div>
-            <div class="track-block b-gen">Graph Coloring</div>
-            <div class="track-block b-gen">Greedy Algo</div>
-            <div class="track-block b-gen">STL</div>
-          </div>
-          <div class="track-desc">
-            An automated scheduling engine using Graph Coloring (Welsh-Powell heuristic) to resolve resource conflicts across 100+ concurrent sessions. Improved scheduling speed 50% over standard backtracking. Applied Prim's MST to reduce classroom travel distance by up to 30%.
-            <div class="track-feats">
-              <span class="feat-pill">Welsh-Powell Coloring</span>
-              <span class="feat-pill">Prim's MST</span>
-              <span class="feat-pill">Conflict Graph</span>
-              <span class="feat-pill">CSV Ingestion</span>
+        <div class="export-panel">
+          <div class="export-left">
+            <div
+              style="font-family:var(--font-mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px;">
+              ◈ SEND MESSAGE</div>
+            <form class="export-form" id="contact-form" action="https://api.web3forms.com/submit" method="POST"
+              onsubmit="sendForm(event)">
+              <input type="hidden" name="access_key" value="73265737-eeb3-4499-b326-81d17e678991">
+              <input type="hidden" name="subject" value="New Portfolio Contact Message">
+              <input type="checkbox" name="botcheck" style="display:none">
+              <div class="form-group">
+                <label class="form-label">NAME</label>
+                <input class="form-input" type="text" name="name" placeholder="Your name..." required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">EMAIL</label>
+                <input class="form-input" type="email" name="email" placeholder="your@email.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">MESSAGE</label>
+                <textarea class="form-input" name="message" placeholder="What's on your mind..." required></textarea>
+              </div>
+              <button class="btn-send" type="submit">▶ RENDER + EXPORT</button>
+            </form>
+            <div class="send-success" id="send-success">
+              ✓ MESSAGE EXPORTED SUCCESSFULLY<br>
+              <span style="color:var(--text2);font-size:10px">I'll get back to you soon.</span>
             </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
+          </div>
+          <div class="export-right">
+            <div
+              style="font-family:var(--font-mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;">
+              ◈ OUTPUT CHANNELS</div>
+            <a class="contact-link" href="mailto:ammar1great@gmail.com">
+              <span class="cl-icon">✉</span>
+              <div>
+                <div>Email</div>
+              </div>
+            </a>
+            <a class="contact-link" href="https://github.com/ammxrrx" target="_blank">
+              <span class="cl-icon">◈</span>
+              <div>
+                <div>Github</div>
+              </div>
+            </a>
+            <a class="contact-link" href="https://www.linkedin.com/in/ammar-nadeem329470315/" target="_blank">
+              <span class="cl-icon">◉</span>
+              <div>
+                <div>LinkedIn</div>
+              </div>
+            </a>
+            <a class="contact-link" href="https://www.youtube.com/@ammxrrx" target="_blank">
+              <span class="cl-icon">▶</span>
+              <div>
+                <div>YouTube</div>
+              </div>
+            </a>
+            <a class="contact-link" href="https://open.spotify.com/user/lfgxglyzb2y5ohekbr5yjfhrq?si=7780b754eeb34df0"
+              target="_blank">
+              <span class="cl-icon">♫</span>
+              <div>
+                <div>Spotify</div>
+              </div>
+            </a>
+            <div
+              style="margin-top:8px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-family:var(--font-mono);font-size:10px;color:var(--text3);">
+              📍 Pakistan
             </div>
           </div>
         </div>
-        <div class="track-expand">▸</div>
       </div>
+    </section>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 06</span>
-          <span class="track-title">N-Queens CSP Solver</span>
-          <span class="track-cat cat-ai">AI / CSP</span>
-        </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-py">Python</div>
-            <div class="track-block b-gen">Backtracking</div>
-            <div class="track-block b-gen">Forward Checking</div>
-          </div>
-          <div class="track-desc">
-            A CSP solver for N-Queens using backtracking with forward checking and constraint propagation. Achieves fast solutions for standard board sizes using heuristic pruning.
-            <div class="track-feats">
-              <span class="feat-pill">Backtracking</span>
-              <span class="feat-pill">Constraint Propagation</span>
-              <span class="feat-pill">AC-3 Heuristics</span>
-            </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
-            </div>
-          </div>
-        </div>
-        <div class="track-expand">▸</div>
-      </div>
+  </main>
 
-      <div class="track-lane" onclick="toggleTrack(this)">
-        <div class="track-header">
-          <span class="track-num">TRACK 07</span>
-          <span class="track-title">Atari Arcade Game (x86 Assembly)</span>
-          <span class="track-cat cat-asm">Assembly / Low-Level</span>
-        </div>
-        <div class="track-body">
-          <div class="track-blocks">
-            <div class="track-block b-asm">x86 ASM</div>
-            <div class="track-block b-gen">BIOS Interrupts</div>
-            <div class="track-block b-gen">VGA B800</div>
-            <div class="track-block b-gen">DOSBox</div>
-          </div>
-          <div class="track-desc">
-            A complete Atari-style brick breaker game in x86 Assembly. Real-time loop, interrupt-driven input (INT 33h, INT 16h), VGA text-mode rendering at segment B800, and PC speaker audio via port I/O. 2-level brick engine with 60+ states, scoring, lives, and progressive difficulty.
-            <div class="track-feats">
-              <span class="feat-pill">VGA Text Mode</span>
-              <span class="feat-pill">INT 33h Mouse</span>
-              <span class="feat-pill">Port I/O Audio</span>
-              <span class="feat-pill">2-Level Engine</span>
-              <span class="feat-pill">DOS Interrupts</span>
-            </div>
-            <div class="track-actions">
-              <a class="btn-sm" href="https://github.com/ammxrrx" target="_blank">GitHub ↗</a>
-            </div>
-          </div>
-        </div>
-        <div class="track-expand">▸</div>
-      </div>
-
+  <footer class="footer">
+    <p>© 2026 Muhammad Ammar. All rights reserved.</p>
+    <p>Designed & developed by Muhammad Ammar</p>
+    <div>
+      <a href="mailto:ammar1great@gmail.com">Email</a>
+      <a href="https://github.com/ammxrrx">GitHub</a>
+      <a href="https://www.linkedin.com/in/ammar-nadeem-329470315/">LinkedIn</a>
     </div>
-  </div>
-</section>
+  </footer>
 
-<!-- ACHIEVEMENTS -->
-<section id="achievements">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">05</span>
-      <span class="section-title">ACHIEVEMENTS — PRESET BANK</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="preset-rack">
-      <div class="preset-card">
-        <div class="preset-icon pi-os">⚙</div>
-        <div class="preset-text">Built a full OS simulation: process management, IPC (pipes, FIFO, shared memory, signals), multi-threading, mutex/semaphore sync, CPU scheduling (FCFS/SJF/RR/Priority), and 3 memory allocation strategies.</div>
-      </div>
-      <div class="preset-card">
-        <div class="preset-icon pi-ds">◈</div>
-        <div class="preset-text">Developed an automated timetable system using Graph Coloring (100+ sessions) and Prim's MST, achieving 50% speed improvement over backtracking.</div>
-      </div>
-      <div class="preset-card">
-        <div class="preset-icon pi-ai">◉</div>
-        <div class="preset-text">Implemented 4+ AI systems: A* pathfinding with 40–60% node reduction, Minimax with 70–80% search space pruning, knowledge-based Wumpus agents, and N-Queens CSP solving.</div>
-      </div>
-      <div class="preset-card">
-        <div class="preset-icon pi-asm">▒</div>
-        <div class="preset-text">Wrote a complete Atari game in x86 Assembly from scratch — real-time rendering via VGA B800 segment, BIOS/DOS interrupts, and PC speaker audio through direct port I/O.</div>
-      </div>
-      <div class="preset-card">
-        <div class="preset-icon pi-db">▦</div>
-        <div class="preset-text">Designed relational databases with EER-to-schema conversion, full normalization (1NF–BCNF), functional dependency analysis, and Oracle 11g / MySQL implementations.</div>
-      </div>
-      <div class="preset-card">
-        <div class="preset-icon pi-music">♫</div>
-        <div class="preset-text">Balancing full-time CS studies with part-time music production — applying pattern recognition, iteration, and craftsmanship from code to sound design.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- MUSIC PORTFOLIO -->
-<section id="music">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">06</span>
-      <span class="section-title">MUSIC — SAMPLE BROWSER</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="sample-browser">
-      <div class="sb-header">
-        <span class="sb-title">◈ AMMAR'S MUSIC LIBRARY</span>
-        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Part-time producer · Beats &amp; Instrumentals</span>
-      </div>
-      <div class="sb-content">
-        <a class="sample-card" href="YOUR_YOUTUBE_LINK_HERE" target="_blank">
-          <div class="sc-icon">▶</div>
-          <div class="sc-label">VIDEO PLATFORM</div>
-          <div class="sc-title">YouTube Channel</div>
-          <div class="sc-link">youtube.com → YOUR_CHANNEL</div>
-        </a>
-        <a class="sample-card" href="YOUR_SPOTIFY_LINK_HERE" target="_blank">
-          <div class="sc-icon">◉</div>
-          <div class="sc-label">STREAMING</div>
-          <div class="sc-title">Spotify Profile</div>
-          <div class="sc-link">open.spotify.com → YOUR_PROFILE</div>
-        </a>
-        <div class="sample-card" style="cursor:default">
-          <div class="sc-icon">⋮</div>
-          <div class="sc-label">LIBRARY</div>
-          <div class="sc-title">Beats &amp; Instrumentals</div>
-          <div class="sc-link">Add your tracks here →</div>
-        </div>
-        <div class="sample-card" style="cursor:default">
-          <div class="sc-icon">♫</div>
-          <div class="sc-label">FEATURED</div>
-          <div class="sc-title">Latest Releases</div>
-          <div class="sc-link">Link your SoundCloud →</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CONTACT -->
-<section id="contact">
-  <div class="section">
-    <div class="section-header">
-      <span class="section-tag">07</span>
-      <span class="section-title">CONTACT — EXPORT PANEL</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="export-panel">
-      <div class="export-left">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px;">◈ SEND MESSAGE</div>
-        <div class="export-form" id="contact-form">
-          <div class="form-group">
-            <label class="form-label">NAME</label>
-            <input class="form-input" type="text" placeholder="Your name...">
-          </div>
-          <div class="form-group">
-            <label class="form-label">EMAIL</label>
-            <input class="form-input" type="email" placeholder="your@email.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">MESSAGE</label>
-            <textarea class="form-input" placeholder="What's on your mind..."></textarea>
-          </div>
-          <button class="btn-send" onclick="sendForm()">▶ RENDER + EXPORT</button>
-        </div>
-        <div class="send-success" id="send-success">
-          ✓ MESSAGE EXPORTED SUCCESSFULLY<br>
-          <span style="color:var(--text2);font-size:10px">I'll get back to you soon.</span>
-        </div>
-      </div>
-      <div class="export-right">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;">◈ OUTPUT CHANNELS</div>
-        <a class="contact-link" href="mailto:ammar1great@gmail.com">
-          <span class="cl-icon">✉</span>
-          <div>
-            <div class="cl-label">EMAIL</div>
-            <div>ammar1great@gmail.com</div>
-          </div>
-        </a>
-        <a class="contact-link" href="https://github.com/ammxrrx" target="_blank">
-          <span class="cl-icon">◈</span>
-          <div>
-            <div class="cl-label">GITHUB</div>
-            <div>github.com/ammxrrx</div>
-          </div>
-        </a>
-        <a class="contact-link" href="https://www.linkedin.com/in/ammar-nadeem329470315/" target="_blank">
-          <span class="cl-icon">◉</span>
-          <div>
-            <div class="cl-label">LINKEDIN</div>
-            <div>linkedin.com/in/ammar-nadeem</div>
-          </div>
-        </a>
-        <a class="contact-link" href="YOUR_YOUTUBE_LINK_HERE" target="_blank">
-          <span class="cl-icon">▶</span>
-          <div>
-            <div class="cl-label">YOUTUBE</div>
-            <div>YOUR_YOUTUBE_LINK_HERE</div>
-          </div>
-        </a>
-        <a class="contact-link" href="YOUR_SPOTIFY_LINK_HERE" target="_blank">
-          <span class="cl-icon">♫</span>
-          <div>
-            <div class="cl-label">SPOTIFY</div>
-            <div>YOUR_SPOTIFY_LINK_HERE</div>
-          </div>
-        </a>
-        <div style="margin-top:8px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-family:var(--font-mono);font-size:10px;color:var(--text3);">
-          📍 Multan / Lahore, Pakistan · +92 304 6363463
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-</main>
-
-<footer>
-  <span class="footer-logo">AMMAR.DAW</span>
-  <span>v1.0.0 — FAST-NUCES · CS 2024–2028</span>
-  <span id="footer-time">--:--:--</span>
-</footer>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
+
 </html>

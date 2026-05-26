@@ -4,8 +4,9 @@
 
 // --- AUDIO PLAYER STATE ---
 const tracks = [
-  { title: "track1.mp3", src: "/music/track1.mp3" },
-  { title: "track2.wav", src: "/music/track2.wav" }
+  { title: "Way-ProdAmmar.mp3", src: "music/Way-ProdAmmar.mp3" },
+  { title: "Ladudi-ProdAmmar.wav", src: "music/Ladudi-ProdAmmar.wav" },
+  { title: "ANYMORE-ProdAmmar.mp3", src: "music/ANYMORE-ProdAmmar.mp3" }
 ];
 let currentTrack = 0;
 let audio = null;
@@ -145,13 +146,42 @@ function toggleTrack(el) {
 
 // --- CONTACT FORM ---
 
-function sendForm() {
-  document.getElementById('contact-form').style.display = 'none';
-  document.getElementById('send-success').style.display = 'block';
-  setTimeout(() => {
-    document.getElementById('contact-form').style.display = 'flex';
-    document.getElementById('send-success').style.display = 'none';
-  }, 3000);
+async function sendForm(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const success = document.getElementById('send-success');
+  const submitBtn = form.querySelector('.btn-send');
+  const originalText = submitBtn.textContent;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'SENDING...';
+
+  try {
+    const response = await fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' }
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Message could not be sent.');
+    }
+
+    form.reset();
+    form.style.display = 'none';
+    success.style.display = 'block';
+    setTimeout(() => {
+      form.style.display = 'flex';
+      success.style.display = 'none';
+    }, 3000);
+  } catch (error) {
+    alert(error.message || 'Message could not be sent. Please try again.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
 }
 
 // --- SKILL FADERS (scroll-triggered animation) ---
@@ -200,3 +230,5 @@ const now = new Date();
 const fmt = n => String(n).padStart(2, '0');
 document.getElementById('footer-time').textContent =
   fmt(now.getHours()) + ':' + fmt(now.getMinutes()) + ':' + fmt(now.getSeconds());
+
+window.addEventListener('load', loadAudio);
