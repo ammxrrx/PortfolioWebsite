@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="light-mode">
 
   <!-- TOP TRANSPORT BAR -->
   <div id="transport">
@@ -22,6 +22,7 @@
       <button class="btn-transport" title="Stop" onclick="stopPlayer()">■</button>
       <button class="btn-transport" title="Previous Track" onclick="prevTrack()">⏮</button>
       <button class="btn-transport" title="Next Track" onclick="nextTrack()">⏭</button>
+      <button class="btn-transport" id="theme-toggle" title="Switch to Dark Mode" onclick="toggleTheme()">☾</button>
     </div>
     <div class="transport-bpm">
       <span>BPM</span>

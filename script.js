@@ -16,6 +16,11 @@ let timeStart = null;
 let elapsed = 0;
 let autoplayUnlockListening = false;
 let autoplayUnlockTrying = false;
+let audioCtx = null;
+let audioSourceNode = null;
+let analyser = null;
+let frequencyData = null;
+let currentAudioEnergy = 0;
 
 // --- AUDIO FUNCTIONS ---
 
@@ -46,6 +51,28 @@ function setPlayerUi(playing) {
   document.getElementById('eq-mini').style.display = playing ? 'flex' : 'none';
 }
 
+function syncThemeToggle() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+
+  const isLight = document.body.classList.contains('light-mode');
+  btn.textContent = isLight ? '☾' : '☼';
+  btn.title = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  syncThemeToggle();
+}
+
+function setupAudioAnalysis() {
+  return;
+}
+
+function resumeAudioAnalysis() {
+  setupAudioAnalysis();
+}
+
 function loadAudio(showBlockedMessage = true) {
   initAudio();
   const p = audio.play();
@@ -55,6 +82,7 @@ function loadAudio(showBlockedMessage = true) {
       setPlayerUi(true);
       startClock();
       document.getElementById('audio-msg').style.display = 'none';
+      resumeAudioAnalysis();
       return true;
     }).catch(() => {
       if (showBlockedMessage) document.getElementById('audio-msg').style.display = 'block';
@@ -65,6 +93,7 @@ function loadAudio(showBlockedMessage = true) {
   setPlayerUi(true);
   startClock();
   document.getElementById('audio-msg').style.display = 'none';
+  resumeAudioAnalysis();
   return Promise.resolve(true);
 }
 
@@ -314,6 +343,189 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 updateScrollProgress();
 
+// --- HERO VISUAL SIMULATION ---
+
+const hero = document.getElementById('hero');
+const heroName = document.querySelector('.hero-name');
+const heroBars = Array.from(document.querySelectorAll('.eq-display .eq-bar'));
+const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+function getVisualPalette() {
+  const light = document.body.classList.contains('light-mode');
+  if (light) {
+    return {
+      playhead: energy => 'rgba(0,96,101,' + (0.12 + energy * 0.18) + ')',
+      wave1: 'rgba(0,96,101,0.36)',
+      wave2: 'rgba(94,103,74,0.28)',
+      wave3: 'rgba(38,116,72,0.20)',
+      link: alpha => 'rgba(0,96,101,' + alpha + ')',
+      waveform: energy => 'rgba(0,96,101,' + (0.34 + energy * 0.24) + ')'
+    };
+  }
+
+  return {
+    playhead: energy => 'rgba(0,215,215,' + (0.055 + energy * 0.13) + ')',
+    wave1: 'rgba(0,215,215,0.26)',
+    wave2: 'rgba(143,151,121,0.20)',
+    wave3: 'rgba(57,255,138,0.14)',
+    link: alpha => 'rgba(0,215,215,' + alpha + ')',
+    waveform: energy => 'rgba(0,215,215,' + (0.24 + energy * 0.20) + ')'
+  };
+}
+
+function readAudioEnergy() {
+  let energy = 0;
+
+  if (analyser && frequencyData && isPlaying) {
+    analyser.getByteFrequencyData(frequencyData);
+    let sum = 0;
+    for (let i = 0; i < frequencyData.length; i++) sum += frequencyData[i];
+    energy = sum / (frequencyData.length * 255);
+  } else {
+    energy = 0.22 + Math.sin(performance.now() * 0.0022) * 0.08;
+  }
+
+  currentAudioEnergy += (energy - currentAudioEnergy) * 0.14;
+  return currentAudioEnergy;
+}
+
+function updateHeroAudioUi(energy) {
+  document.documentElement.style.setProperty('--beat', energy.toFixed(3));
+
+  if (heroName) {
+    heroName.classList.add('audio-pulse');
+    heroName.style.transform = 'scale(' + (1 + energy * 0.025).toFixed(3) + ')';
+  }
+
+  heroBars.forEach((bar, index) => {
+    const bin = frequencyData ? frequencyData[(index * 5) % frequencyData.length] / 255 : 0;
+    const wave = Math.sin(performance.now() * 0.004 + index * 0.75) * 0.5 + 0.5;
+    const level = isPlaying && frequencyData ? bin : wave * energy;
+    bar.style.height = Math.round(10 + level * 31) + 'px';
+  });
+}
+
+function initHeroSimulation() {
+  if (!hero || reduceMotion) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'hero-sim-canvas';
+  hero.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  let w = 0;
+  let h = 0;
+  let dpr = 1;
+  let playhead = 0;
+
+  function resizeHeroCanvas() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = hero.clientWidth;
+    h = hero.clientHeight;
+    canvas.width = Math.max(1, Math.floor(w * dpr));
+    canvas.height = Math.max(1, Math.floor(h * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const targetCount = Math.min(70, Math.max(32, Math.floor(w / 22)));
+    while (particles.length < targetCount) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.35,
+        size: 1 + Math.random() * 1.8
+      });
+    }
+    particles.length = targetCount;
+  }
+
+  function drawWaveLayer(energy, yBase, color, phase, ampMultiplier) {
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 8) {
+      const freqIndex = frequencyData ? Math.floor((x / w) * frequencyData.length) : 0;
+      const audioLevel = frequencyData ? frequencyData[freqIndex] / 255 : 0.35;
+      const sine = Math.sin(x * 0.018 + phase) * 0.45 + Math.sin(x * 0.006 - phase * 0.7) * 0.55;
+      const amp = (18 + energy * 80) * ampMultiplier;
+      const y = yBase + sine * amp * (0.45 + audioLevel);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4 + energy * 2;
+    ctx.shadowBlur = 18 + energy * 22;
+    ctx.shadowColor = color;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawHeroSimulation(nowMs) {
+    const energy = readAudioEnergy();
+    const palette = getVisualPalette();
+    updateHeroAudioUi(energy);
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+
+    playhead = (playhead + 0.65 + energy * 4) % Math.max(w, 1);
+    ctx.strokeStyle = palette.playhead(energy);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(playhead, 0);
+    ctx.lineTo(playhead, h);
+    ctx.stroke();
+
+    const phase = nowMs * 0.0018;
+    drawWaveLayer(energy, h * 0.38, palette.wave1, phase, 1);
+    drawWaveLayer(energy, h * 0.49, palette.wave2, phase * 1.25, 0.72);
+    drawWaveLayer(energy, h * 0.60, palette.wave3, phase * 0.85, 0.95);
+
+    particles.forEach((p, i) => {
+      p.x += p.vx * (1 + energy * 2.4);
+      p.y += p.vy * (1 + energy * 1.8);
+      if (p.x < 0 || p.x > w) p.vx *= -1;
+      if (p.y < 0 || p.y > h) p.vy *= -1;
+
+      for (let j = i + 1; j < particles.length; j++) {
+        const other = particles[j];
+        const dx = p.x - other.x;
+        const dy = p.y - other.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const reach = 105 + energy * 80;
+        if (dist < reach) {
+          ctx.strokeStyle = palette.link((1 - dist / reach) * (0.045 + energy * 0.08));
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(other.x, other.y);
+          ctx.stroke();
+        }
+      }
+
+      ctx.fillStyle = 'rgba(224,224,240,' + (0.24 + energy * 0.5) + ')';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size + energy * 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(drawHeroSimulation);
+  }
+
+  resizeHeroCanvas();
+  window.addEventListener('resize', resizeHeroCanvas);
+  requestAnimationFrame(drawHeroSimulation);
+}
+
+function updateCursorEnergy(e) {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+  document.documentElement.style.setProperty('--cursor-x', pointer.x + 'px');
+  document.documentElement.style.setProperty('--cursor-y', pointer.y + 'px');
+}
+
+window.addEventListener('pointermove', updateCursorEnergy, { passive: true });
+initHeroSimulation();
+
 // --- WAVEFORM CANVAS ---
 
 const wc = document.getElementById('waveform-canvas');
@@ -324,18 +536,20 @@ if (wc) {
     wc.width = wc.offsetWidth;
     wc.height = wc.offsetHeight;
     ctx2.clearRect(0, 0, wc.width, wc.height);
-    ctx2.strokeStyle = 'rgba(0,229,255,0.6)';
-    ctx2.lineWidth = 1.5;
+    const energy = Math.max(currentAudioEnergy, 0.16);
+    ctx2.strokeStyle = getVisualPalette().waveform(energy);
+    ctx2.lineWidth = 1.2 + energy * 2.2;
     ctx2.beginPath();
     for (let x = 0; x < wc.width; x++) {
-      const freq1 = Math.sin((x / wc.width) * Math.PI * 8 + wt) * 18;
-      const freq2 = Math.sin((x / wc.width) * Math.PI * 20 + wt * 1.3) * 8;
-      const freq3 = Math.sin((x / wc.width) * Math.PI * 3 + wt * 0.7) * 30;
-      const y = wc.height / 2 + freq1 + freq2 + freq3;
+      const bin = frequencyData ? frequencyData[Math.floor((x / wc.width) * frequencyData.length)] / 255 : 0.35;
+      const freq1 = Math.sin((x / wc.width) * Math.PI * 8 + wt) * (14 + energy * 36);
+      const freq2 = Math.sin((x / wc.width) * Math.PI * 20 + wt * 1.3) * (6 + bin * 20);
+      const freq3 = Math.sin((x / wc.width) * Math.PI * 3 + wt * 0.7) * (22 + energy * 34);
+      const y = wc.height / 2 + (freq1 + freq2 + freq3) * (0.72 + bin * 0.5);
       x === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
     }
     ctx2.stroke();
-    wt += 0.02;
+    wt += 0.018 + energy * 0.035;
     requestAnimationFrame(drawWave);
   }
   drawWave();
@@ -353,3 +567,4 @@ if (footerTime) {
 
 document.addEventListener('DOMContentLoaded', startAutoplay);
 window.addEventListener('load', startAutoplay);
+syncThemeToggle();
