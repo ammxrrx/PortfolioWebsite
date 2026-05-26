@@ -96,6 +96,11 @@ html{scroll-behavior:smooth;}
   text-decoration:none;
 }
 .nav-link:hover{color:var(--cyan);}
+.nav-link.active{
+  color:var(--cyan);
+  background:rgba(0,229,255,0.08);
+  box-shadow:inset 0 -2px 0 var(--cyan),0 0 14px rgba(0,229,255,0.08);
+}
 
 /* EQ BARS MINI */
 .eq-mini{display:flex;align-items:flex-end;gap:1px;height:18px;padding:0 12px;}
@@ -202,11 +207,85 @@ main{padding-top:52px;}
   font-family:var(--font-mono);font-size:9px;color:var(--text3);
   overflow:hidden;position:relative;
 }
+.timeline-ruler::after{
+  content:'';position:absolute;left:0;bottom:0;height:2px;
+  width:var(--scroll-progress,0%);
+  background:linear-gradient(90deg,var(--cyan),var(--green));
+  box-shadow:0 0 14px rgba(0,229,255,0.55);
+  pointer-events:none;
+}
 .ruler-marks{display:flex;gap:0;flex:1;}
 .ruler-mark{
   flex:1;border-left:1px solid var(--border);
   padding-left:4px;height:28px;display:flex;align-items:center;
   min-width:60px;
+}
+
+/* SCROLL MOTION */
+.reveal-on-scroll{
+  opacity:0;
+  transform:translateY(42px) scale(0.985);
+  transition:
+    opacity 1.05s cubic-bezier(.2,.8,.2,1),
+    transform 1.05s cubic-bezier(.2,.8,.2,1),
+    box-shadow 1.05s ease,
+    border-color 1.05s ease;
+  will-change:opacity,transform;
+  position:relative;
+}
+.reveal-on-scroll.is-visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+.reveal-on-scroll::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 0%,rgba(0,229,255,0.10) 44%,rgba(57,255,138,0.08) 50%,transparent 62%);
+  opacity:0;
+  transform:translateX(-120%);
+  pointer-events:none;
+  z-index:2;
+}
+.reveal-on-scroll.is-visible::after{animation:scanReveal 1.25s ease 0.12s both;}
+@keyframes scanReveal{
+  0%{opacity:0;transform:translateX(-120%);}
+  18%{opacity:1;}
+  100%{opacity:0;transform:translateX(120%);}
+}
+.track-lane.reveal-on-scroll.is-visible,
+.channel-strip.reveal-on-scroll.is-visible,
+.preset-card.reveal-on-scroll.is-visible,
+.sample-card.reveal-on-scroll.is-visible{
+  box-shadow:0 0 26px rgba(0,229,255,0.08);
+}
+.section-header.reveal-on-scroll .section-line{
+  transform:scaleX(0.12);
+  transform-origin:left;
+  transition:transform 1.15s cubic-bezier(.2,.8,.2,1),background 1s ease,box-shadow 1s ease;
+}
+.section-header.reveal-on-scroll.is-visible .section-line,
+section.section-active .section-line{
+  transform:scaleX(1);
+  background:linear-gradient(90deg,var(--cyan),var(--border),transparent);
+  box-shadow:0 0 12px rgba(0,229,255,0.18);
+}
+.track-lane.reveal-on-scroll.is-visible .track-block,
+.preset-card.reveal-on-scroll.is-visible .preset-icon,
+.sample-card.reveal-on-scroll.is-visible .sc-icon{
+  animation:controlPop 0.75s cubic-bezier(.2,.8,.2,1) both;
+}
+.track-lane.reveal-on-scroll.is-visible .track-block:nth-child(2){animation-delay:0.08s;}
+.track-lane.reveal-on-scroll.is-visible .track-block:nth-child(3){animation-delay:0.16s;}
+.track-lane.reveal-on-scroll.is-visible .track-block:nth-child(4){animation-delay:0.24s;}
+.track-lane.reveal-on-scroll.is-visible .track-block:nth-child(5){animation-delay:0.32s;}
+@keyframes controlPop{
+  0%{opacity:0;transform:translateY(10px) scale(0.92);}
+  65%{opacity:1;transform:translateY(-2px) scale(1.03);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.export-panel.reveal-on-scroll.is-visible .export-left,
+.export-panel.reveal-on-scroll.is-visible .export-right{
+  box-shadow:0 0 28px rgba(0,229,255,0.06);
 }
 
 /* SECTION WRAPPER */
@@ -538,6 +617,19 @@ textarea.form-input{min-height:100px;resize:vertical;}
   #transport .nav-links{display:none;}
   .track-header{width:140px;min-width:140px;}
   .export-panel{grid-template-columns:1fr;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .reveal-on-scroll{
+    opacity:1;
+    transform:none;
+    transition:none;
+  }
+  .reveal-on-scroll::after{display:none;}
+  .section-header.reveal-on-scroll .section-line{transform:none;transition:none;}
+  .track-lane.reveal-on-scroll.is-visible .track-block,
+  .preset-card.reveal-on-scroll.is-visible .preset-icon,
+  .sample-card.reveal-on-scroll.is-visible .sc-icon{animation:none;}
 }
 
 /* FOOTER */
