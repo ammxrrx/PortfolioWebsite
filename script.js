@@ -21,6 +21,9 @@ let audioSourceNode = null;
 let analyser = null;
 let frequencyData = null;
 let currentAudioEnergy = 0;
+const mobilePerfQuery = window.matchMedia('(max-width: 768px), (pointer: coarse)');
+const isMobilePerf = () => mobilePerfQuery.matches;
+const getCanvasDpr = () => Math.min(window.devicePixelRatio || 1, isMobilePerf() ? 1 : 2);
 
 // --- AUDIO FUNCTIONS ---
 
@@ -434,14 +437,17 @@ function initHeroSimulation() {
   let playhead = 0;
 
   function resizeHeroCanvas() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = getCanvasDpr();
     w = hero.clientWidth;
     h = hero.clientHeight;
     canvas.width = Math.max(1, Math.floor(w * dpr));
     canvas.height = Math.max(1, Math.floor(h * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const targetCount = Math.min(70, Math.max(32, Math.floor(w / 22)));
+    const maxParticles = isMobilePerf() ? 34 : 70;
+    const minParticles = isMobilePerf() ? 18 : 32;
+    const particleSpacing = isMobilePerf() ? 36 : 22;
+    const targetCount = Math.min(maxParticles, Math.max(minParticles, Math.floor(w / particleSpacing)));
     while (particles.length < targetCount) {
       particles.push({
         x: Math.random() * w,
@@ -456,7 +462,8 @@ function initHeroSimulation() {
 
   function drawWaveLayer(energy, yBase, color, phase, ampMultiplier) {
     ctx.beginPath();
-    for (let x = 0; x <= w; x += 8) {
+    const step = isMobilePerf() ? 14 : 8;
+    for (let x = 0; x <= w; x += step) {
       const freqIndex = frequencyData ? Math.floor((x / w) * frequencyData.length) : 0;
       const audioLevel = frequencyData ? frequencyData[freqIndex] / 255 : 0.35;
       const sine = Math.sin(x * 0.018 + phase) * 0.45 + Math.sin(x * 0.006 - phase * 0.7) * 0.55;
@@ -472,7 +479,14 @@ function initHeroSimulation() {
     ctx.shadowBlur = 0;
   }
 
+  let lastHeroDrawTime = 0;
   function drawHeroSimulation(nowMs) {
+    const minFrameMs = isMobilePerf() ? 33 : 0;
+    if (nowMs - lastHeroDrawTime < minFrameMs) {
+      requestAnimationFrame(drawHeroSimulation);
+      return;
+    }
+    lastHeroDrawTime = nowMs;
     const energy = readAudioEnergy();
     const palette = getVisualPalette();
     updateHeroAudioUi(energy);
@@ -546,20 +560,41 @@ const wc = document.getElementById('waveform-canvas');
 if (wc) {
   const ctx2 = wc.getContext('2d');
   let wt = 0;
+  let waveW = 0;
+  let waveH = 0;
+
+  function resizeWaveCanvas() {
+    const dpr = getCanvasDpr();
+    const nextW = Math.max(1, Math.floor(wc.offsetWidth * dpr));
+    const nextH = Math.max(1, Math.floor(wc.offsetHeight * dpr));
+    if (nextW === waveW && nextH === waveH) return;
+
+    waveW = nextW;
+    waveH = nextH;
+    wc.width = waveW;
+    wc.height = waveH;
+    ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  resizeWaveCanvas();
+  window.addEventListener('resize', resizeWaveCanvas, { passive: true });
+
   function drawWave() {
-    wc.width = wc.offsetWidth;
-    wc.height = wc.offsetHeight;
-    ctx2.clearRect(0, 0, wc.width, wc.height);
+    resizeWaveCanvas();
+    const cssW = wc.offsetWidth;
+    const cssH = wc.offsetHeight;
+    ctx2.clearRect(0, 0, cssW, cssH);
     const energy = Math.max(currentAudioEnergy, 0.16);
     ctx2.strokeStyle = getVisualPalette().waveform(energy);
     ctx2.lineWidth = 1.2 + energy * 2.2;
     ctx2.beginPath();
-    for (let x = 0; x < wc.width; x++) {
-      const bin = frequencyData ? frequencyData[Math.floor((x / wc.width) * frequencyData.length)] / 255 : 0.35;
-      const freq1 = Math.sin((x / wc.width) * Math.PI * 8 + wt) * (14 + energy * 36);
-      const freq2 = Math.sin((x / wc.width) * Math.PI * 20 + wt * 1.3) * (6 + bin * 20);
-      const freq3 = Math.sin((x / wc.width) * Math.PI * 3 + wt * 0.7) * (22 + energy * 34);
-      const y = wc.height / 2 + (freq1 + freq2 + freq3) * (0.72 + bin * 0.5);
+    const xStep = isMobilePerf() ? 2 : 1;
+    for (let x = 0; x < cssW; x += xStep) {
+      const bin = frequencyData ? frequencyData[Math.floor((x / cssW) * frequencyData.length)] / 255 : 0.35;
+      const freq1 = Math.sin((x / cssW) * Math.PI * 8 + wt) * (14 + energy * 36);
+      const freq2 = Math.sin((x / cssW) * Math.PI * 20 + wt * 1.3) * (6 + bin * 20);
+      const freq3 = Math.sin((x / cssW) * Math.PI * 3 + wt * 0.7) * (22 + energy * 34);
+      const y = cssH / 2 + (freq1 + freq2 + freq3) * (0.72 + bin * 0.5);
       x === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
     }
     ctx2.stroke();
@@ -637,7 +672,7 @@ function initSectionSpectrograms() {
   }
 
   function resizeSpectrogram(target) {
-    target.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    target.dpr = getCanvasDpr();
     target.cssWidth = Math.max(1, target.container.clientWidth);
     target.cssHeight = Math.max(1, target.container.clientHeight);
     target.canvas.width = Math.floor(target.cssWidth * target.dpr);
@@ -719,7 +754,14 @@ function initSectionSpectrograms() {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  let lastDrawTime = 0;
   function draw(nowMs) {
+    const minFrameMs = isMobilePerf() ? 50 : 0;
+    if (nowMs - lastDrawTime < minFrameMs) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    lastDrawTime = nowMs;
     const energy = Math.max(currentAudioEnergy, 0.16);
 
     targets.forEach(target => {
@@ -822,7 +864,7 @@ function initSectionAmbience() {
   }
 
   function resizeAmbient(target) {
-    target.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    target.dpr = getCanvasDpr();
     target.cssWidth = Math.max(1, target.container.clientWidth);
     target.cssHeight = Math.max(1, target.container.clientHeight);
     target.canvas.width = Math.floor(target.cssWidth * target.dpr);
@@ -949,7 +991,14 @@ function initSectionAmbience() {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  let lastDrawTime = 0;
   function draw(nowMs) {
+    const minFrameMs = isMobilePerf() ? 66 : 0;
+    if (nowMs - lastDrawTime < minFrameMs) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    lastDrawTime = nowMs;
     const energy = Math.max(currentAudioEnergy, 0.12);
     targets.forEach(target => {
       if (target.active) drawAmbientTarget(target, nowMs, energy);

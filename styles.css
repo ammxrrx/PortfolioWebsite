@@ -1065,8 +1065,13 @@ textarea.form-input{min-height:100px;resize:vertical;}
     letter-spacing:1.1px;
   }
   .eq-mini{display:none !important;}
-  .section-spectrogram{opacity:0.11;}
-  .section-ambient{opacity:0.28;}
+  .hero-sim-canvas,
+  .section-spectrogram,
+  .section-ambient{
+    mix-blend-mode:normal !important;
+  }
+  .section-spectrogram{opacity:0.13;}
+  .section-ambient{opacity:0.30;}
   #hero{padding:56px 20px 40px;}
   .section{padding:40px 20px;}
   .section-header{
