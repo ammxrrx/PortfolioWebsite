@@ -404,7 +404,7 @@ main{
   border-top:1px solid var(--border);border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 20px;
   font-family:var(--font-mono);font-size:9px;color:var(--text3);
-  overflow:hidden;position:relative;
+  overflow:hidden;position:relative;z-index:1;
 }
 .timeline-ruler::after{
   content:'';position:absolute;left:0;bottom:0;height:2px;
@@ -496,7 +496,14 @@ section.section-active .section-tag{
 }
 
 /* SECTION WRAPPER */
-.section{padding:60px 60px;max-width:1400px;margin:0 auto;width:100%;}
+.section{
+  padding:60px 60px;
+  max-width:1400px;
+  margin:0 auto;
+  width:100%;
+  position:relative;
+  z-index:1;
+}
 .section-header{
   display:flex;align-items:center;gap:16px;
   margin-bottom:32px;
@@ -547,6 +554,32 @@ section.section-active .section-tag{
 
 /* SKILLS - MIXER */
 #skills{background:var(--bg);}
+#about,
+#projects,
+#music,
+.footer{
+  position:relative;
+  isolation:isolate;
+}
+.section-spectrogram{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  display:block;
+  pointer-events:none;
+  opacity:0.14;
+  mix-blend-mode:screen;
+}
+body.light-mode .section-spectrogram{
+  opacity:0.18;
+  mix-blend-mode:multiply;
+}
+.footer > :not(.section-spectrogram){
+  position:relative;
+  z-index:1;
+}
 .mixer-rack{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
@@ -965,6 +998,7 @@ textarea.form-input{min-height:100px;resize:vertical;}
     letter-spacing:1.1px;
   }
   .eq-mini{display:none !important;}
+  .section-spectrogram{opacity:0.11;}
   #hero{padding:56px 20px 40px;}
   .section{padding:40px 20px;}
   .section-header{
@@ -1102,6 +1136,8 @@ footer{
   padding:24px 60px;
   display:flex;align-items:center;justify-content:space-between;
   font-family:var(--font-mono);font-size:10px;color:var(--text3);
+  position:relative;
+  z-index:1;
 }
 .footer-logo{color:var(--cyan);letter-spacing:3px;font-weight:bold;}
 

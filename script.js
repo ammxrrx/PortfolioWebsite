@@ -555,6 +555,198 @@ if (wc) {
   drawWave();
 }
 
+// --- SECTION SPECTROGRAM WATERFALLS ---
+
+function getSpectrogramColor(level) {
+  const light = document.body.classList.contains('light-mode');
+  const stops = light
+    ? [
+        [0, [244, 241, 231]],
+        [0.28, [143, 151, 121]],
+        [0.55, [0, 127, 131]],
+        [0.78, [79, 141, 95]],
+        [1, [156, 122, 36]]
+      ]
+    : [
+        [0, [9, 12, 8]],
+        [0.25, [29, 36, 26]],
+        [0.5, [0, 215, 215]],
+        [0.76, [57, 255, 138]],
+        [1, [198, 177, 119]]
+      ];
+
+  let left = stops[0];
+  let right = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (level >= stops[i][0] && level <= stops[i + 1][0]) {
+      left = stops[i];
+      right = stops[i + 1];
+      break;
+    }
+  }
+
+  const range = Math.max(right[0] - left[0], 0.001);
+  const t = Math.max(0, Math.min(1, (level - left[0]) / range));
+  const rgb = left[1].map((channel, i) => Math.round(channel + (right[1][i] - channel) * t));
+  const alpha = light ? 0.18 + level * 0.54 : 0.22 + level * 0.62;
+  return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha.toFixed(3) + ')';
+}
+
+function initSectionSpectrograms() {
+  const canvases = Array.from(document.querySelectorAll('.section-spectrogram'));
+  if (!canvases.length || reduceMotion) return;
+
+  const seed = 4.2;
+  const targets = canvases.map(canvas => ({
+    canvas,
+    ctx: canvas.getContext('2d', { alpha: true }),
+    container: canvas.parentElement,
+    active: true,
+    cssWidth: 0,
+    cssHeight: 0,
+    dpr: 1
+  }));
+
+  function readBandLevel(index, total, x, nowMs) {
+    if (frequencyData && isPlaying) {
+      const dataIndex = Math.floor((1 - index / Math.max(total - 1, 1)) * (frequencyData.length - 1));
+      return frequencyData[dataIndex] / 255;
+    }
+
+    const bassBias = 1 - index / Math.max(total - 1, 1);
+    const drift = nowMs * 0.001;
+    const waveA = Math.sin(x * 0.010 + drift * 1.6 + index * 0.34 + seed) * 0.5 + 0.5;
+    const waveB = Math.sin(x * 0.024 - drift * 0.95 - index * 0.19 + seed * 1.7) * 0.5 + 0.5;
+    const ridge = Math.sin(x * 0.006 + index * 0.11 + drift * 2.1 + seed * 0.4) * 0.5 + 0.5;
+    const energy = Math.max(currentAudioEnergy, 0.16);
+    return Math.max(0, Math.min(1, 0.08 + waveA * 0.28 + waveB * 0.18 + ridge * 0.18 + bassBias * energy * 0.42));
+  }
+
+  function resizeSpectrogram(target) {
+    target.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    target.cssWidth = Math.max(1, target.container.clientWidth);
+    target.cssHeight = Math.max(1, target.container.clientHeight);
+    target.canvas.width = Math.floor(target.cssWidth * target.dpr);
+    target.canvas.height = Math.floor(target.cssHeight * target.dpr);
+    target.ctx.setTransform(target.dpr, 0, 0, target.dpr, 0, 0);
+    target.ctx.imageSmoothingEnabled = true;
+  }
+
+  function drawBand(target, band, bands, nowMs, energy) {
+    const ctx = target.ctx;
+    const w = target.cssWidth;
+    const h = target.cssHeight;
+    const bandGap = h / bands;
+    const yBase = bandGap * (band + 0.5);
+    const xStep = Math.max(8, Math.min(18, w / 42));
+    const flow = nowMs * (0.030 + band * 0.0018);
+    const thickness = bandGap * (0.54 + energy * 0.32);
+    const amp = Math.min(44, Math.max(10, bandGap * 0.48 + energy * 34));
+    const top = [];
+    const bottom = [];
+
+    for (let x = 0; x <= w + xStep; x += xStep) {
+      const phaseX = x + flow;
+      const level = readBandLevel(band, bands, phaseX, nowMs);
+      const smooth =
+        Math.sin(phaseX * 0.012 + band * 0.67 + seed) * 0.58 +
+        Math.sin(phaseX * 0.026 - band * 0.31 + seed * 1.9) * 0.28 +
+        Math.sin(phaseX * 0.006 + nowMs * 0.00042 + band) * 0.22;
+      const lift = (level - 0.5) * amp;
+      const y = yBase + smooth * amp * 0.36 + lift;
+      const half = thickness * (0.34 + level * 0.48);
+      top.push([x, y - half]);
+      bottom.push([x, y + half]);
+    }
+
+    const centerLevel = readBandLevel(band, bands, flow + w * 0.45, nowMs);
+    const grad = ctx.createLinearGradient(0, yBase - bandGap, 0, yBase + bandGap);
+    grad.addColorStop(0, getSpectrogramColor(Math.max(0, centerLevel - 0.22)));
+    grad.addColorStop(0.48, getSpectrogramColor(Math.min(1, centerLevel + 0.18)));
+    grad.addColorStop(1, getSpectrogramColor(Math.max(0, centerLevel - 0.26)));
+
+    ctx.beginPath();
+    top.forEach((point, index) => {
+      index === 0 ? ctx.moveTo(point[0], point[1]) : ctx.lineTo(point[0], point[1]);
+    });
+    for (let i = bottom.length - 1; i >= 0; i--) {
+      ctx.lineTo(bottom[i][0], bottom[i][1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    top.forEach((point, index) => {
+      const y = (point[1] + bottom[index][1]) * 0.5;
+      index === 0 ? ctx.moveTo(point[0], y) : ctx.lineTo(point[0], y);
+    });
+    ctx.strokeStyle = getSpectrogramColor(Math.min(1, centerLevel + 0.26));
+    ctx.lineWidth = 0.55 + energy * 1.1;
+    ctx.globalAlpha = 0.34;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTarget(target, nowMs, energy) {
+    const ctx = target.ctx;
+    const w = target.cssWidth;
+    const h = target.cssHeight;
+    const light = document.body.classList.contains('light-mode');
+    const bands = Math.max(16, Math.min(34, Math.floor(h / 34)));
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = light ? 'multiply' : 'screen';
+
+    for (let i = 0; i < bands; i++) {
+      drawBand(target, i, bands, nowMs, energy);
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function draw(nowMs) {
+    const energy = Math.max(currentAudioEnergy, 0.16);
+
+    targets.forEach(target => {
+      if (!target.active || target.cssWidth <= 1 || target.cssHeight <= 1) return;
+      drawTarget(target, nowMs, energy);
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  targets.forEach(target => resizeSpectrogram(target));
+
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(entries => {
+      entries.forEach(entry => {
+        const target = targets.find(item => item.container === entry.target);
+        if (target) resizeSpectrogram(target);
+      });
+    });
+    targets.forEach(target => resizeObserver.observe(target.container));
+  } else {
+    window.addEventListener('resize', () => {
+      targets.forEach(target => resizeSpectrogram(target));
+    }, { passive: true });
+  }
+
+  if (window.IntersectionObserver) {
+    const visibilityObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const target = targets.find(item => item.container === entry.target);
+        if (target) target.active = entry.isIntersecting;
+      });
+    }, { rootMargin: '160px 0px' });
+    targets.forEach(target => visibilityObserver.observe(target.container));
+  }
+
+  requestAnimationFrame(draw);
+}
+
+initSectionSpectrograms();
+
 // --- FOOTER CLOCK (static init) ---
 
 const now = new Date();
