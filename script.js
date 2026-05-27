@@ -303,28 +303,42 @@ if (reduceMotion) {
 }
 
 const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
-const navSections = Array.from(navLinks)
-  .map(link => document.querySelector(link.getAttribute('href')))
+const sectionSequence = ['hero', 'about', 'skills', 'projects', 'achievements', 'music', 'contact', 'end'];
+const rulerMarks = Array.from(document.querySelectorAll('.ruler-mark'));
+const activeSections = sectionSequence
+  .map(id => id === 'end' ? document.querySelector('footer') : document.getElementById(id))
   .filter(Boolean);
 
-function setActiveNav(id) {
+rulerMarks.forEach((mark, index) => {
+  mark.dataset.section = sectionSequence[index] || '';
+});
+
+function setActiveSection(id) {
   navLinks.forEach(link => {
     link.classList.toggle('active', link.getAttribute('href') === '#' + id);
   });
-  navSections.forEach(section => {
+  activeSections.forEach(section => {
     section.classList.toggle('section-active', section.id === id);
+  });
+
+  const activeIndex = sectionSequence.indexOf(id);
+  rulerMarks.forEach((mark, index) => {
+    mark.classList.toggle('is-active', index === activeIndex);
+    mark.classList.toggle('is-past', activeIndex > -1 && index < activeIndex);
   });
 }
 
 const navObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      setActiveNav(entry.target.id);
+      const id = entry.target.matches('footer') ? 'end' : entry.target.id;
+      setActiveSection(id);
     }
   });
 }, { threshold: 0.2, rootMargin: '-38% 0px -52% 0px' });
 
-navSections.forEach(section => navObserver.observe(section));
+activeSections.forEach(section => navObserver.observe(section));
+setActiveSection('hero');
 
 let scrollTicking = false;
 function updateScrollProgress() {
