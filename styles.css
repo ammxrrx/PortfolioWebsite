@@ -573,12 +573,33 @@ section.section-active .section-tag{
   mix-blend-mode:screen;
 }
 body.light-mode .section-spectrogram{
-  opacity:0.18;
+  opacity:0.34;
   mix-blend-mode:multiply;
 }
 .footer > :not(.section-spectrogram){
   position:relative;
   z-index:1;
+}
+#skills,
+#achievements,
+#contact{
+  position:relative;
+  isolation:isolate;
+}
+.section-ambient{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  display:block;
+  pointer-events:none;
+  opacity:0.18;
+  mix-blend-mode:screen;
+}
+body.light-mode .section-ambient{
+  opacity:0.38;
+  mix-blend-mode:multiply;
 }
 .mixer-rack{
   display:grid;
@@ -999,6 +1020,7 @@ textarea.form-input{min-height:100px;resize:vertical;}
   }
   .eq-mini{display:none !important;}
   .section-spectrogram{opacity:0.11;}
+  .section-ambient{opacity:0.28;}
   #hero{padding:56px 20px 40px;}
   .section{padding:40px 20px;}
   .section-header{

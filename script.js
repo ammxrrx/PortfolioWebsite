@@ -747,6 +747,233 @@ function initSectionSpectrograms() {
 
 initSectionSpectrograms();
 
+// --- LIGHT SECTION AMBIENCE ---
+
+function getAmbientPalette() {
+  const light = document.body.classList.contains('light-mode');
+  if (light) {
+    return {
+      cyan: 'rgba(0,127,131,',
+      green: 'rgba(79,141,95,',
+      amber: 'rgba(156,122,36,',
+      purple: 'rgba(109,95,127,',
+      text: 'rgba(24,32,21,'
+    };
+  }
+
+  return {
+    cyan: 'rgba(0,215,215,',
+    green: 'rgba(57,255,138,',
+    amber: 'rgba(198,177,119,',
+    purple: 'rgba(139,130,150,',
+    text: 'rgba(224,224,240,'
+  };
+}
+
+function ambientRgba(base, alpha) {
+  return base + alpha.toFixed(3) + ')';
+}
+
+function seededNoise(index, seed) {
+  const value = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function initSectionAmbience() {
+  const canvases = Array.from(document.querySelectorAll('.section-ambient'));
+  if (!canvases.length || reduceMotion) return;
+
+  const targets = canvases.map((canvas, index) => ({
+    canvas,
+    ctx: canvas.getContext('2d', { alpha: true }),
+    container: canvas.parentElement,
+    type: canvas.dataset.ambient || 'mixer',
+    seed: 7.5 + index * 23.1,
+    active: true,
+    cssWidth: 0,
+    cssHeight: 0,
+    dpr: 1,
+    nodes: []
+  }));
+
+  function rebuildNodes(target) {
+    const count = Math.max(20, Math.min(58, Math.floor(target.cssWidth / 24)));
+    target.nodes = Array.from({ length: count }, (_, i) => ({
+      x: seededNoise(i * 2, target.seed) * target.cssWidth,
+      y: seededNoise(i * 2 + 1, target.seed) * target.cssHeight,
+      size: 1.2 + seededNoise(i * 3 + 2, target.seed) * 2.8,
+      phase: seededNoise(i * 5 + 3, target.seed) * Math.PI * 2,
+      speed: 0.25 + seededNoise(i * 7 + 4, target.seed) * 0.75
+    }));
+  }
+
+  function resizeAmbient(target) {
+    target.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    target.cssWidth = Math.max(1, target.container.clientWidth);
+    target.cssHeight = Math.max(1, target.container.clientHeight);
+    target.canvas.width = Math.floor(target.cssWidth * target.dpr);
+    target.canvas.height = Math.floor(target.cssHeight * target.dpr);
+    target.ctx.setTransform(target.dpr, 0, 0, target.dpr, 0, 0);
+    target.ctx.imageSmoothingEnabled = true;
+    rebuildNodes(target);
+  }
+
+  function drawMidiBlocks(target, nowMs, energy, palette) {
+    const ctx = target.ctx;
+    const w = target.cssWidth;
+    const h = target.cssHeight;
+    const rows = Math.max(3, Math.min(5, Math.floor(h / 130)));
+    const lanes = Math.max(4, Math.min(8, Math.floor(w / 185)));
+    const t = nowMs * 0.00018;
+
+    for (let row = 0; row < rows; row++) {
+      const y = ((row + 0.55) / rows) * h;
+      for (let col = 0; col < lanes; col++) {
+        const noise = seededNoise(row * 47 + col * 13, target.seed);
+        const drift = Math.sin(t * 9 + row * 0.8 + noise * 4) * 18;
+        const x = ((col + noise * 0.55) / lanes) * w + drift;
+        const blockW = 46 + noise * 120;
+        const blockH = 10 + noise * 18;
+        const pulse = Math.sin(nowMs * 0.0011 + col * 0.7 + row) * 0.5 + 0.5;
+        const color = [palette.cyan, palette.green, palette.amber, palette.purple][(row + col) % 4];
+
+        ctx.fillStyle = ambientRgba(color, 0.22 + pulse * 0.18 + energy * 0.12);
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, blockW, blockH, 3);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x, y, blockW, blockH);
+        }
+      }
+    }
+  }
+
+  function drawConstellation(target, nowMs, energy, palette) {
+    const ctx = target.ctx;
+    const time = nowMs * 0.00045;
+    const points = target.nodes.map((node, i) => ({
+      x: node.x + Math.sin(time * node.speed + node.phase) * 24,
+      y: node.y + Math.cos(time * node.speed * 0.9 + node.phase + i) * 18,
+      size: node.size
+    }));
+
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const dx = points[i].x - points[j].x;
+        const dy = points[i].y - points[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const reach = 86 + energy * 42;
+        if (dist < reach) {
+          ctx.strokeStyle = ambientRgba(palette.cyan, (1 - dist / reach) * 0.48);
+          ctx.lineWidth = 1.7;
+          ctx.beginPath();
+          ctx.moveTo(points[i].x, points[i].y);
+          ctx.lineTo(points[j].x, points[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    points.forEach((point, i) => {
+      const color = i % 3 === 0 ? palette.green : i % 3 === 1 ? palette.cyan : palette.amber;
+      ctx.fillStyle = ambientRgba(color, 0.42 + energy * 0.18);
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function drawContactRings(target, nowMs, energy, palette) {
+    const ctx = target.ctx;
+    const w = target.cssWidth;
+    const h = target.cssHeight;
+    const cx = w * 0.76;
+    const cy = h * 0.44;
+    const time = nowMs * 0.00055;
+    const maxRadius = Math.max(w, h) * 0.58;
+
+    for (let i = 0; i < 8; i++) {
+      const radius = (maxRadius * (i + 1)) / 9 + Math.sin(time * 2 + i) * 8;
+      const start = time * (0.7 + i * 0.08) + i * 0.6;
+      const arc = Math.PI * (0.72 + Math.sin(time + i) * 0.18);
+      ctx.strokeStyle = ambientRgba(i % 2 ? palette.cyan : palette.green, 0.30 + energy * 0.18);
+      ctx.lineWidth = 2.3 + energy * 2.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, start, start + arc);
+      ctx.stroke();
+    }
+
+    target.nodes.slice(0, 20).forEach((node, i) => {
+      const angle = time * (0.9 + node.speed * 0.25) + node.phase;
+      const radius = 44 + seededNoise(i, target.seed) * Math.min(w, h) * 0.42;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle * 0.82) * radius * 0.58;
+      ctx.fillStyle = ambientRgba(i % 2 ? palette.amber : palette.cyan, 0.42);
+      ctx.beginPath();
+      ctx.arc(x, y, node.size * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function drawAmbientTarget(target, nowMs, energy) {
+    const ctx = target.ctx;
+    const palette = getAmbientPalette();
+    const light = document.body.classList.contains('light-mode');
+
+    ctx.clearRect(0, 0, target.cssWidth, target.cssHeight);
+    ctx.globalCompositeOperation = light ? 'multiply' : 'screen';
+
+    if (target.type === 'constellation') {
+      drawConstellation(target, nowMs, energy, palette);
+    } else if (target.type === 'rings') {
+      drawContactRings(target, nowMs, energy, palette);
+    } else {
+      drawMidiBlocks(target, nowMs, energy, palette);
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function draw(nowMs) {
+    const energy = Math.max(currentAudioEnergy, 0.12);
+    targets.forEach(target => {
+      if (target.active) drawAmbientTarget(target, nowMs, energy);
+    });
+    requestAnimationFrame(draw);
+  }
+
+  targets.forEach(target => resizeAmbient(target));
+
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(entries => {
+      entries.forEach(entry => {
+        const target = targets.find(item => item.container === entry.target);
+        if (target) resizeAmbient(target);
+      });
+    });
+    targets.forEach(target => resizeObserver.observe(target.container));
+  } else {
+    window.addEventListener('resize', () => {
+      targets.forEach(target => resizeAmbient(target));
+    }, { passive: true });
+  }
+
+  if (window.IntersectionObserver) {
+    const visibilityObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const target = targets.find(item => item.container === entry.target);
+        if (target) target.active = entry.isIntersecting;
+      });
+    }, { rootMargin: '160px 0px' });
+    targets.forEach(target => visibilityObserver.observe(target.container));
+  }
+
+  requestAnimationFrame(draw);
+}
+
+initSectionAmbience();
+
 // --- FOOTER CLOCK (static init) ---
 
 const now = new Date();
