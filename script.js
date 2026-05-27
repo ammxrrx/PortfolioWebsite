@@ -388,7 +388,7 @@ const releaseSlides = [
   {
     title: 'Love Letter',
     artists: 'Featuring: Omer Khan Niazi & Dan1yal Shah1d',
-    image: 'images/Love letter driving artwork spotify.png',
+    image: 'images/Love letter driving artwork spotify.jpg',
     url: 'https://youtu.be/eqFz3zTvnbE?si=ObTjbjQYYdrKTK3R'
   },
   {
