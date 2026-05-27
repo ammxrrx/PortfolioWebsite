@@ -4,16 +4,18 @@
 
 // --- AUDIO PLAYER STATE ---
 const tracks = [
-  { title: "MOVE - Ammar", src: "music/Ladudi-ProdAmmar.wav" },
-  { title: " MAKE WAY - Ammar", src: "music/Way-ProdAmmar.mp3" },
-  { title: "ANYMORE - Ammar", src: "music/ANYMORE-ProdAmmar.mp3" }
+  { title: "Autumn - Ammar", src: "music/nice mp3 2.mp3", bpm: 101 },
+  { title: "Move - Ammar", src: "music/Ladudi-ProdAmmar.wav", bpm: 100 },
+  { title: "Reflections - Ammar", src: "music/oo aa mp3 1.mp3", bpm: 90 },
+  { title: "Make Way - Ammar", src: "music/Way-ProdAmmar.mp3", bpm: 140 },
+  { title: "Anymore - Ammar", src: "music/ANYMORE-ProdAmmar.mp3", bpm: 115 },
+  { title: "Tell You - Ammar", src: "music/guitarshit mp3 1.mp3", bpm: 113 },
+  { title: "Think - Ammar", src: "music/jerseyshit.mp3", bpm: 132 }
 ];
 let currentTrack = 0;
 let audio = null;
 let isPlaying = false;
 let clockInterval = null;
-let timeStart = null;
-let elapsed = 0;
 let autoplayUnlockListening = false;
 let autoplayUnlockTrying = false;
 let audioCtx = null;
@@ -42,6 +44,7 @@ function initAudio() {
   }
   const nextSrc = new URL(tracks[currentTrack].src, window.location.href).href;
   if (audio.src !== nextSrc) audio.src = tracks[currentTrack].src;
+  document.getElementById('bpm-display').textContent = tracks[currentTrack].bpm;
   document.getElementById('now-playing').textContent = '▷ ' + tracks[currentTrack].title;
 }
 
@@ -117,8 +120,7 @@ function stopPlayer() {
   isPlaying = false;
   setPlayerUi(false);
   stopClock();
-  document.getElementById('mini-prog-fill').style.width = '0%';
-  document.getElementById('time-display').textContent = '00:00:00';
+  resetClock();
 }
 
 function removeAutoplayUnlock() {
@@ -155,6 +157,7 @@ function startAutoplay() {
 function nextTrack() {
   currentTrack = (currentTrack + 1) % tracks.length;
   const wasPlaying = isPlaying;
+  resetClock();
   initAudio();
   if (wasPlaying) { audio.play(); startClock(); }
 }
@@ -162,6 +165,7 @@ function nextTrack() {
 function prevTrack() {
   currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
   const wasPlaying = isPlaying;
+  resetClock();
   initAudio();
   if (wasPlaying) { audio.play(); startClock(); }
 }
@@ -171,38 +175,50 @@ function setVolume(v) {
 }
 
 function updateProgress() {
-  if (!audio || !audio.duration) return;
-  const pct = (audio.currentTime / audio.duration) * 100;
-  document.getElementById('mini-prog-fill').style.width = pct + '%';
+  if (!audio) return;
+  updateTimeDisplay(audio.currentTime);
+  if (audio.duration) {
+    const pct = (audio.currentTime / audio.duration) * 100;
+    document.getElementById('mini-prog-fill').style.width = pct + '%';
+  }
 }
 
 function seekFromBar(e, bar) {
   if (!audio || !audio.duration) return;
   const rect = bar.getBoundingClientRect();
-  const pct = (e.clientX - rect.left) / rect.width;
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
   audio.currentTime = pct * audio.duration;
+  updateProgress();
 }
 
 // --- CLOCK ---
 
+function resetClock() {
+  updateTimeDisplay(0);
+  document.getElementById('mini-prog-fill').style.width = '0%';
+}
+
+function updateTimeDisplay(seconds) {
+  const totalSeconds = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const fmt = n => String(n).padStart(2, '0');
+  const timeStr = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
+  document.getElementById('time-display').textContent = timeStr;
+  const footerTime = document.getElementById('footer-time');
+  if (footerTime) footerTime.textContent = timeStr;
+}
+
 function startClock() {
   if (clockInterval) clearInterval(clockInterval);
-  timeStart = Date.now() - elapsed * 1000;
-  clockInterval = setInterval(() => {
-    elapsed = (Date.now() - timeStart) / 1000;
-    const h = Math.floor(elapsed / 3600);
-    const m = Math.floor((elapsed % 3600) / 60);
-    const s = Math.floor(elapsed % 60);
-    const fmt = n => String(n).padStart(2, '0');
-    const timeStr = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
-    document.getElementById('time-display').textContent = timeStr;
-    const footerTime = document.getElementById('footer-time');
-    if (footerTime) footerTime.textContent = timeStr;
-  }, 500);
+  updateProgress();
+  clockInterval = setInterval(updateProgress, 250);
 }
 
 function stopClock() {
   if (clockInterval) clearInterval(clockInterval);
+  clockInterval = null;
 }
 
 // --- PROJECT TRACKS ---
@@ -281,12 +297,13 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const revealGroups = new Map();
 
 revealItems.forEach(el => {
-  el.classList.add('reveal-on-scroll');
+  el.classList.add('reveal-on-scroll', 'reveal-from-down');
   if (el.matches('.track-lane, .channel-strip, .preset-card, .sample-card')) {
     const group = el.closest('.arrangement-view, .mixer-rack, .preset-rack, .sb-content');
     const groupIndex = revealGroups.get(group) || 0;
     revealGroups.set(group, groupIndex + 1);
-    el.style.transitionDelay = Math.min(groupIndex * 0.12, 0.48) + 's';
+    el.dataset.revealDelay = Math.min(groupIndex * 0.12, 0.48) + 's';
+    el.style.transitionDelay = el.dataset.revealDelay;
   }
 });
 
@@ -297,7 +314,12 @@ if (reduceMotion) {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
-        revealObserver.unobserve(entry.target);
+      } else {
+        entry.target.classList.remove('is-visible');
+        const willRevealFromUp = entry.boundingClientRect.top < 0;
+        entry.target.classList.toggle('reveal-from-up', willRevealFromUp);
+        entry.target.classList.toggle('reveal-from-down', !willRevealFromUp);
+        entry.target.style.transitionDelay = willRevealFromUp ? '0s' : (entry.target.dataset.revealDelay || '0s');
       }
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
@@ -610,19 +632,19 @@ function getSpectrogramColor(level) {
   const light = document.body.classList.contains('light-mode');
   const stops = light
     ? [
-        [0, [244, 241, 231]],
-        [0.28, [143, 151, 121]],
-        [0.55, [0, 127, 131]],
-        [0.78, [79, 141, 95]],
-        [1, [156, 122, 36]]
-      ]
+      [0, [244, 241, 231]],
+      [0.28, [143, 151, 121]],
+      [0.55, [0, 127, 131]],
+      [0.78, [79, 141, 95]],
+      [1, [156, 122, 36]]
+    ]
     : [
-        [0, [9, 12, 8]],
-        [0.25, [29, 36, 26]],
-        [0.5, [0, 215, 215]],
-        [0.76, [57, 255, 138]],
-        [1, [198, 177, 119]]
-      ];
+      [0, [9, 12, 8]],
+      [0.25, [29, 36, 26]],
+      [0.5, [0, 215, 215]],
+      [0.76, [57, 255, 138]],
+      [1, [198, 177, 119]]
+    ];
 
   let left = stops[0];
   let right = stops[stops.length - 1];

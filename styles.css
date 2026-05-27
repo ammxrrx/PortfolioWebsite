@@ -458,18 +458,29 @@ main > section.section-active::after{
 }
 .reveal-on-scroll{
   opacity:0;
-  transform:translateY(34px) scale(0.975);
+  transform:translate3d(0,28px,0) scale(0.985);
   transition:
-    opacity 0.95s cubic-bezier(.16,1,.3,1),
-    transform 0.95s cubic-bezier(.16,1,.3,1),
-    box-shadow 1.05s ease,
-    border-color 1.05s ease;
+    opacity 0.72s cubic-bezier(.2,.8,.2,1),
+    transform 0.72s cubic-bezier(.2,.8,.2,1);
   will-change:opacity,transform;
+  backface-visibility:hidden;
   position:relative;
+}
+.reveal-on-scroll.reveal-from-up{
+  transform:translate3d(0,-22px,0) scale(0.985);
+  transition:
+    opacity 0.42s cubic-bezier(.2,.8,.2,1),
+    transform 0.42s cubic-bezier(.2,.8,.2,1);
+}
+.reveal-on-scroll.reveal-from-down{
+  transform:translate3d(0,28px,0) scale(0.985);
+  transition:
+    opacity 0.72s cubic-bezier(.2,.8,.2,1),
+    transform 0.72s cubic-bezier(.2,.8,.2,1);
 }
 .reveal-on-scroll.is-visible{
   opacity:1;
-  transform:translateY(0) scale(1);
+  transform:translate3d(0,0,0) scale(1);
 }
 .reveal-on-scroll::after{
   content:'';
@@ -481,6 +492,7 @@ main > section.section-active::after{
   z-index:2;
 }
 .reveal-on-scroll.is-visible::after{animation:scanReveal 1.25s ease 0.12s both;}
+.reveal-on-scroll.reveal-from-up.is-visible::after{animation:none;}
 @keyframes scanReveal{
   0%{opacity:0;transform:translateX(-120%);}
   18%{opacity:1;}
@@ -516,6 +528,11 @@ section.section-active .section-tag{
 .sample-card.reveal-on-scroll.is-visible .sc-icon{
   animation:controlPop 0.75s cubic-bezier(.2,.8,.2,1) both;
 }
+.track-lane.reveal-on-scroll.reveal-from-up.is-visible .track-block,
+.preset-card.reveal-on-scroll.reveal-from-up.is-visible .preset-icon,
+.sample-card.reveal-on-scroll.reveal-from-up.is-visible .sc-icon{
+  animation:none;
+}
 .track-lane.reveal-on-scroll.is-visible .track-block:nth-child(2){animation-delay:0.08s;}
 .track-lane.reveal-on-scroll.is-visible .track-block:nth-child(3){animation-delay:0.16s;}
 .track-lane.reveal-on-scroll.is-visible .track-block:nth-child(4){animation-delay:0.24s;}
@@ -531,10 +548,13 @@ section.section-active .section-tag{
 .track-lane.reveal-on-scroll.is-visible .track-block{
   animation:clipLoad 0.82s cubic-bezier(.16,1,.3,1) both;
 }
+.track-lane.reveal-on-scroll.reveal-from-up.is-visible .track-block{
+  animation:none;
+}
 @keyframes clipLoad{
-  0%{opacity:0;transform:scaleX(0.22) translateY(8px);filter:saturate(0.6);}
-  58%{opacity:1;transform:scaleX(1.04) translateY(0);filter:saturate(1.3);}
-  100%{opacity:1;transform:scaleX(1) translateY(0);filter:saturate(1);}
+  0%{opacity:0;transform:scaleX(0.22) translateY(8px);}
+  58%{opacity:1;transform:scaleX(1.04) translateY(0);}
+  100%{opacity:1;transform:scaleX(1) translateY(0);}
 }
 .export-panel.reveal-on-scroll.is-visible .export-left,
 .export-panel.reveal-on-scroll.is-visible .export-right{
