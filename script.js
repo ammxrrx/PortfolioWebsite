@@ -412,6 +412,36 @@ const releaseSlides = [
 ];
 let releaseIndex = 0;
 let releaseTimer = null;
+let releaseRenderToken = 0;
+const releaseImageCache = new Map();
+
+function preloadReleaseImage(src) {
+  if (!src) return null;
+  if (releaseImageCache.has(src)) return releaseImageCache.get(src);
+
+  const img = new Image();
+  img.decoding = 'async';
+  img.loading = 'eager';
+  img.src = src;
+  const ready = img.decode
+    ? img.decode().catch(() => {})
+    : new Promise(resolve => {
+      if (img.complete) {
+        resolve();
+        return;
+      }
+      img.onload = resolve;
+      img.onerror = resolve;
+    });
+
+  const cached = { img, ready };
+  releaseImageCache.set(src, cached);
+  return cached;
+}
+
+function preloadReleaseImages() {
+  releaseSlides.forEach(release => preloadReleaseImage(release.image));
+}
 
 function getReleaseEls() {
   return {
@@ -428,19 +458,23 @@ function getReleaseEls() {
 function renderRelease(animate = true) {
   const els = getReleaseEls();
   if (!els.stage || !releaseSlides.length) return;
-  const release = releaseSlides[releaseIndex];
+  const nextIndex = releaseIndex;
+  const release = releaseSlides[nextIndex];
+  const renderToken = ++releaseRenderToken;
+  const cachedImage = preloadReleaseImage(release.image);
 
   const applyRelease = () => {
+    if (renderToken !== releaseRenderToken) return;
     els.stage.href = release.url;
     els.stage.setAttribute('aria-label', 'Open ' + release.title + ' on YouTube');
-    els.image.src = release.image;
+    els.image.src = cachedImage ? cachedImage.img.src : release.image;
     els.image.alt = release.title + ' cover';
-    els.kicker.textContent = 'RELEASE ' + String(releaseIndex + 1).padStart(2, '0');
+    els.kicker.textContent = 'RELEASE ' + String(nextIndex + 1).padStart(2, '0');
     els.title.textContent = release.title;
     els.artists.textContent = release.artists;
     if (els.dots) {
       Array.from(els.dots.children).forEach((dot, index) => {
-        dot.classList.toggle('active', index === releaseIndex);
+        dot.classList.toggle('active', index === nextIndex);
       });
     }
   };
@@ -452,9 +486,10 @@ function renderRelease(animate = true) {
 
   els.stage.classList.add('is-sliding');
   setTimeout(() => {
+    if (renderToken !== releaseRenderToken) return;
     applyRelease();
     els.stage.classList.remove('is-sliding');
-  }, 180);
+  }, window.matchMedia('(max-width: 600px)').matches ? 80 : 140);
 }
 
 function resetReleaseTimer() {
@@ -501,6 +536,7 @@ function initReleaseCarousel() {
     });
     els.window.addEventListener('mouseleave', resetReleaseTimer);
   }
+  preloadReleaseImages();
   renderRelease(false);
   resetReleaseTimer();
 }
