@@ -1119,6 +1119,58 @@ function initSectionAmbience() {
     });
   }
 
+  function drawReleaseOrbit(target, nowMs, energy, palette) {
+    const ctx = target.ctx;
+    const w = target.cssWidth;
+    const h = target.cssHeight;
+    const cx = w * 0.5;
+    const cy = h * 0.52;
+    const time = nowMs * 0.00055;
+    const baseRadius = Math.min(w, h) * 0.44;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.18 + Math.sin(time * 0.7) * 0.05);
+    for (let i = 0; i < 10; i++) {
+      const radius = baseRadius * (0.26 + i * 0.078) + Math.sin(time * 1.6 + i) * 5;
+      const start = time * (0.55 + i * 0.03) + i * 0.52;
+      const arc = Math.PI * (0.86 + Math.sin(time + i * 0.8) * 0.2);
+      const color = i % 3 === 0 ? palette.cyan : i % 3 === 1 ? palette.amber : palette.green;
+      ctx.strokeStyle = ambientRgba(color, 0.18 + energy * 0.12);
+      ctx.lineWidth = 1.4 + energy * 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius * 1.34, radius * 0.43, 0, start, start + arc);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    for (let i = 0; i < 7; i++) {
+      const x = ((i + 0.5) / 7) * w + Math.sin(time * 1.2 + i) * 20;
+      const y1 = h * 0.18 + Math.cos(time + i) * 12;
+      const y2 = h * 0.86 + Math.sin(time * 0.9 + i) * 14;
+      ctx.strokeStyle = ambientRgba(i % 2 ? palette.cyan : palette.purple, 0.10 + energy * 0.08);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x - 34, y1);
+      ctx.lineTo(x + 34, y2);
+      ctx.stroke();
+    }
+
+    target.nodes.slice(0, 28).forEach((node, i) => {
+      const angle = node.phase + time * (0.82 + node.speed * 0.28);
+      const radius = Math.min(w, h) * (0.14 + seededNoise(i + 11, target.seed) * 0.46);
+      const x = cx + Math.cos(angle) * radius * 1.48;
+      const y = cy + Math.sin(angle * 0.82) * radius * 0.58;
+      const size = 3 + node.size * 1.5 + energy * 3;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle + Math.PI / 4);
+      ctx.fillStyle = ambientRgba(i % 3 === 0 ? palette.amber : palette.cyan, 0.30 + energy * 0.12);
+      ctx.fillRect(-size * 0.5, -size * 0.5, size, size);
+      ctx.restore();
+    });
+  }
+
   function drawAmbientTarget(target, nowMs, energy) {
     const ctx = target.ctx;
     const palette = getAmbientPalette();
@@ -1131,6 +1183,8 @@ function initSectionAmbience() {
       drawConstellation(target, nowMs, energy, palette);
     } else if (target.type === 'rings') {
       drawContactRings(target, nowMs, energy, palette);
+    } else if (target.type === 'release') {
+      drawReleaseOrbit(target, nowMs, energy, palette);
     } else {
       drawMidiBlocks(target, nowMs, energy, palette);
     }
