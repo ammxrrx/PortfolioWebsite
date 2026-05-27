@@ -574,12 +574,41 @@
       </div>
     </section>
 
+    <!-- RELEASE SHOWCASE -->
+    <section id="releases">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-tag">07</span>
+          <span class="section-title">MUSIC — RELEASE WINDOW</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="release-window">
+          <button class="release-nav release-prev" type="button" aria-label="Previous release"
+            onclick="prevRelease()">‹</button>
+          <a class="release-stage" id="release-link" href="https://youtu.be/eqFz3zTvnbE?si=N7_ieGp9jnIkmy2U"
+            target="_blank" rel="noopener">
+            <div class="release-cover" id="release-cover">
+              <img id="release-image" src="images/CHAL PARAY.png" alt="Chal Paray cover">
+            </div>
+            <div class="release-info">
+              <span class="release-kicker" id="release-kicker">NOW PLAYING</span>
+              <h3 id="release-title">Chal Paray</h3>
+              <p id="release-artists">Featuring: Omer Khan Niazi & Dan1yal Shah1d</p>
+            </div>
+          </a>
+          <button class="release-nav release-next" type="button" aria-label="Next release"
+            onclick="nextRelease()">›</button>
+          <div class="release-dots" id="release-dots" aria-label="Release selector"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- CONTACT -->
     <section id="contact">
       <canvas class="section-ambient" id="contact-ambient" data-ambient="rings" aria-hidden="true"></canvas>
       <div class="section">
         <div class="section-header">
-          <span class="section-tag">07</span>
+          <span class="section-tag">08</span>
           <span class="section-title">CONTACT — EXPORT PANEL</span>
           <div class="section-line"></div>
         </div>
@@ -595,15 +624,15 @@
               <input type="checkbox" name="botcheck" style="display:none">
               <div class="form-group">
                 <label class="form-label">NAME</label>
-                <input class="form-input" type="text" name="name" placeholder="Your name..." required>
+                <input class="form-input" type="text" name="name" placeholder="your name..." required>
               </div>
               <div class="form-group">
                 <label class="form-label">EMAIL</label>
-                <input class="form-input" type="email" name="email" placeholder="your@email.com" required>
+                <input class="form-input" type="email" name="email" placeholder="your @email.com" required>
               </div>
               <div class="form-group">
                 <label class="form-label">MESSAGE</label>
-                <textarea class="form-input" name="message" placeholder="What's on your mind..." required></textarea>
+                <textarea class="form-input" name="message" placeholder="write me a message..." required></textarea>
               </div>
               <button class="btn-send" type="submit">▶ RENDER + EXPORT</button>
             </form>

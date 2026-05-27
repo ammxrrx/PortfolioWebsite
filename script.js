@@ -291,7 +291,7 @@ faders.forEach(f => observer.observe(f));
 // --- SCROLL MOTION ---
 
 const revealItems = document.querySelectorAll(
-  '.section-header, .about-panel, .channel-strip, .track-lane, .preset-card, .sample-card, .export-panel'
+  '.section-header, .about-panel, .channel-strip, .track-lane, .preset-card, .sample-card, .release-window, .export-panel'
 );
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const revealGroups = new Map();
@@ -381,6 +381,131 @@ window.addEventListener('scroll', () => {
   }
 }, { passive: true });
 updateScrollProgress();
+
+// --- RELEASE CAROUSEL ---
+
+const releaseSlides = [
+  {
+    title: 'Love Letter',
+    artists: 'Featuring: Omer Khan Niazi & Dan1yal Shah1d',
+    image: 'images/Love letter driving artwork spotify.png',
+    url: 'https://youtu.be/eqFz3zTvnbE?si=ObTjbjQYYdrKTK3R'
+  },
+  {
+    title: 'Chal Paray',
+    artists: 'Featuring: Omer Khan Niazi & Dan1yal Shah1d',
+    image: 'images/CHAL PARAY.png',
+    url: 'https://youtu.be/x1zpjBoFSBc?si=Cq9QYEq-PvwQLgON'
+  },
+  {
+    title: 'Takedown',
+    artists: 'Featuring: Omer Khan Niazi',
+    image: 'images/takedown final art.png',
+    url: 'https://youtu.be/zGNlzSv0XFg?si=7UYSxfa9iM33Me6e'
+  },
+  {
+    title: 'Hydrangea',
+    artists: '',
+    image: 'images/hydrangea.png',
+    url: 'https://youtu.be/l1O0tijAPqk?si=ZhM2tFY0IWu5Qsz0'
+  }
+];
+let releaseIndex = 0;
+let releaseTimer = null;
+
+function getReleaseEls() {
+  return {
+    stage: document.getElementById('release-link'),
+    image: document.getElementById('release-image'),
+    kicker: document.getElementById('release-kicker'),
+    title: document.getElementById('release-title'),
+    artists: document.getElementById('release-artists'),
+    dots: document.getElementById('release-dots'),
+    window: document.querySelector('.release-window')
+  };
+}
+
+function renderRelease(animate = true) {
+  const els = getReleaseEls();
+  if (!els.stage || !releaseSlides.length) return;
+  const release = releaseSlides[releaseIndex];
+
+  const applyRelease = () => {
+    els.stage.href = release.url;
+    els.stage.setAttribute('aria-label', 'Open ' + release.title + ' on YouTube');
+    els.image.src = release.image;
+    els.image.alt = release.title + ' cover';
+    els.kicker.textContent = 'RELEASE ' + String(releaseIndex + 1).padStart(2, '0');
+    els.title.textContent = release.title;
+    els.artists.textContent = release.artists;
+    if (els.dots) {
+      Array.from(els.dots.children).forEach((dot, index) => {
+        dot.classList.toggle('active', index === releaseIndex);
+      });
+    }
+  };
+
+  if (!animate) {
+    applyRelease();
+    return;
+  }
+
+  els.stage.classList.add('is-sliding');
+  setTimeout(() => {
+    applyRelease();
+    els.stage.classList.remove('is-sliding');
+  }, 180);
+}
+
+function resetReleaseTimer() {
+  if (releaseTimer) clearInterval(releaseTimer);
+  if (!reduceMotion && releaseSlides.length > 1) {
+    releaseTimer = setInterval(nextRelease, 4200);
+  }
+}
+
+function nextRelease() {
+  releaseIndex = (releaseIndex + 1) % releaseSlides.length;
+  renderRelease();
+  resetReleaseTimer();
+}
+
+function prevRelease() {
+  releaseIndex = (releaseIndex - 1 + releaseSlides.length) % releaseSlides.length;
+  renderRelease();
+  resetReleaseTimer();
+}
+
+function goToRelease(index) {
+  if (index === releaseIndex) return;
+  releaseIndex = index;
+  renderRelease();
+  resetReleaseTimer();
+}
+
+function initReleaseCarousel() {
+  const els = getReleaseEls();
+  if (!els.stage || !els.dots) return;
+  els.dots.innerHTML = '';
+  releaseSlides.forEach((release, index) => {
+    const dot = document.createElement('button');
+    dot.className = 'release-dot';
+    dot.type = 'button';
+    dot.setAttribute('aria-label', 'Show ' + release.title);
+    dot.addEventListener('click', () => goToRelease(index));
+    els.dots.appendChild(dot);
+  });
+  if (els.window) {
+    els.window.addEventListener('mouseenter', () => {
+      if (releaseTimer) clearInterval(releaseTimer);
+    });
+    els.window.addEventListener('mouseleave', resetReleaseTimer);
+  }
+  renderRelease(false);
+  resetReleaseTimer();
+}
+
+initReleaseCarousel();
 
 // --- HERO VISUAL SIMULATION ---
 
